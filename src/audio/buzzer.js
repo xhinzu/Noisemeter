@@ -82,4 +82,42 @@ export class AudioBuzzer {
       this.stopAlert();
     }
   }
+
+  /**
+   * Plays a 1-second sample pulse sequence so teachers can test/demo the buzzer sound
+   */
+  playDemoTone() {
+    this.initContext();
+    if (this.audioCtx && this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume();
+    }
+
+    const playPulse = (offsetMs) => {
+      setTimeout(() => {
+        try {
+          if (!this.audioCtx) return;
+          const now = this.audioCtx.currentTime;
+          const osc = this.audioCtx.createOscillator();
+          const gain = this.audioCtx.createGain();
+
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(880, now);
+
+          gain.gain.setValueAtTime(0.001, now);
+          gain.gain.exponentialRampToValueAtTime(0.25, now + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+          osc.connect(gain);
+          gain.connect(this.audioCtx.destination);
+
+          osc.start(now);
+          osc.stop(now + 0.26);
+        } catch (e) {}
+      }, offsetMs);
+    };
+
+    playPulse(0);
+    playPulse(350);
+    playPulse(700);
+  }
 }

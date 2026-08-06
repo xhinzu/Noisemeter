@@ -109,6 +109,7 @@ class ClassroomNoiseMeterApp {
     this.btnSaveSettings = document.getElementById('btn-save-settings');
     this.btnCloseSession = document.getElementById('btn-close-session');
     this.btnNewSession = document.getElementById('btn-new-session');
+    this.btnTestBuzzer = document.getElementById('btn-test-buzzer');
 
     // Settings elements
     this.spectralSensitivitySlider = document.getElementById('spectral-sensitivity-slider');
@@ -245,6 +246,17 @@ class ClassroomNoiseMeterApp {
     this.toggleBuzzer.addEventListener('change', (e) => {
       this.buzzer.setEnabled(e.target.checked);
     });
+
+    if (this.btnTestBuzzer) {
+      this.btnTestBuzzer.addEventListener('click', () => {
+        const originalText = this.btnTestBuzzer.innerHTML;
+        this.btnTestBuzzer.innerHTML = '<span>🔊 Playing...</span>';
+        this.buzzer.playDemoTone();
+        setTimeout(() => {
+          this.btnTestBuzzer.innerHTML = originalText;
+        }, 1200);
+      });
+    }
 
     // Teacher Override Button
     this.btnTeacherOverride.addEventListener('click', () => {

@@ -596,6 +596,12 @@ body {
   flex-direction: column;
 }
 
+.toggle-action-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .toggle-title {
   font-size: 0.85rem;
   font-weight: 700;
