@@ -7,6 +7,7 @@ export class SessionTracker {
   constructor() {
     this.startTime = Date.now();
     this.timerInterval = null;
+    this.isSessionActive = false;
 
     this.currentQuietStreakSec = 0;
     this.longestQuietStreakSec = 0;
@@ -19,6 +20,7 @@ export class SessionTracker {
   }
 
   start() {
+    this.isSessionActive = true;
     this.startTime = Date.now();
     this.currentQuietStreakSec = 0;
     this.longestQuietStreakSec = 0;
@@ -27,6 +29,14 @@ export class SessionTracker {
     if (this.timerInterval) clearInterval(this.timerInterval);
 
     this.timerInterval = setInterval(() => this.tick(), 1000);
+  }
+
+  stop() {
+    this.isSessionActive = false;
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
   }
 
   tick() {

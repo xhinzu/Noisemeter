@@ -35,12 +35,14 @@ class ClassroomNoiseMeterApp {
     // Bind Handlers
     this.bindEvents();
 
-    // Initialize Canvas & Start App
+    // Initialize Canvas & Check Camera Hardware
     this.renderGauge(35.0, this.alertSystem.thresholdDb);
     this.snapshotManager.checkCameraHardware();
 
-    // Start Session Clock
-    this.sessionTracker.start();
+    // Show Start Session modal on launch instead of auto-starting
+    if (this.startSessionModal) {
+      this.startSessionModal.classList.remove('hidden');
+    }
   }
 
   loadSavedSettings() {
@@ -92,11 +94,13 @@ class ClassroomNoiseMeterApp {
 
     // Modals
     this.alertBanner = document.getElementById('alert-banner');
+    this.startSessionModal = document.getElementById('start-session-modal');
     this.permissionModal = document.getElementById('permission-modal');
     this.settingsModal = document.getElementById('settings-modal');
     this.sessionModal = document.getElementById('session-modal');
 
     // Buttons
+    this.btnStartClassSession = document.getElementById('btn-start-class-session');
     this.btnGrantMicModal = document.getElementById('btn-grant-mic-modal');
     this.btnRequestMic = document.getElementById('btn-request-mic');
     this.btnSettings = document.getElementById('btn-settings');
@@ -212,6 +216,15 @@ class ClassroomNoiseMeterApp {
 
     // --- UI Control Event Listeners ---
 
+    // Start Session Button
+    if (this.btnStartClassSession) {
+      this.btnStartClassSession.addEventListener('click', () => {
+        this.startSessionModal.classList.add('hidden');
+        this.sessionTracker.start();
+        this.startAudioStream();
+      });
+    }
+
     // Mic Access Buttons
     this.btnGrantMicModal.addEventListener('click', () => this.startAudioStream());
     this.btnRequestMic.addEventListener('click', () => this.startAudioStream());
@@ -307,8 +320,13 @@ class ClassroomNoiseMeterApp {
       this.sessionModal.classList.add('hidden');
       this.alertSystem.resetSession();
       this.snapshotManager.clearAllSnapshots();
-      this.sessionTracker.reset();
+      this.sessionTracker.stop();
       this.alertCountDisplay.textContent = "0";
+      this.sessionTimerDisplay.textContent = "00:00";
+      this.streakDisplay.textContent = "00:00";
+      if (this.startSessionModal) {
+        this.startSessionModal.classList.remove('hidden');
+      }
     });
 
     this.btnClearGallery.addEventListener('click', () => {
