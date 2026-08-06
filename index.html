@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Classroom Noise Meter | Smart Acoustic Monitor</title>
+  <meta name="description" content="A real-time classroom noise monitor using Web Audio API to detect crowd chatter vs single voice with teacher override and privacy-first local snapshot logging." />
+  <link rel="stylesheet" href="/src/styles/main.css" />
+  <!-- Google Fonts: Inter and JetBrains Mono for instrument-grade typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="theme-dark">
+  <!-- Visual Red Alert Full Screen Glow Overlay (Active when alert triggers) -->
+  <div id="alert-banner" class="alert-banner hidden" aria-live="assertive" role="alert">
+    <div class="alert-content">
+      <span class="alert-icon">⚠️</span>
+      <span class="alert-text">NOISE THRESHOLD EXCEEDED - CROWD CHATTER DETECTED</span>
+    </div>
+  </div>
+
+  <div id="app" class="app-container">
+    <!-- Header / Nav Bar -->
+    <header class="top-bar">
+      <div class="brand">
+        <div class="brand-symbol">🔊</div>
+        <div class="brand-text">
+          <h1>CLASSROOM NOISE METER</h1>
+          <span class="brand-tagline">ACOUSTIC MONITOR &amp; CLASSROOM METRICS</span>
+        </div>
+      </div>
+
+      <div class="header-stats">
+        <div class="stat-pill" title="Current uninterrupted quiet streak">
+          <span class="pill-label">QUIET STREAK</span>
+          <span id="streak-display" class="pill-value">00:00</span>
+        </div>
+        <div class="stat-pill" title="Total noise alerts triggered this class">
+          <span class="pill-label">ALERTS</span>
+          <span id="alert-count-display" class="pill-value">0</span>
+        </div>
+        <div class="stat-pill" title="Session duration">
+          <span class="pill-label">CLASS TIME</span>
+          <span id="session-timer-display" class="pill-value">00:00</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="btn-settings" class="btn btn-secondary" aria-label="Open Settings">
+          <span>⚙️ SETTINGS</span>
+        </button>
+        <button id="btn-end-session" class="btn btn-primary" aria-label="End Class Session">
+          <span>🛑 END CLASS</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Dashboard -->
+    <main class="dashboard-grid">
+      
+      <!-- Center Gauge & Primary Loudness Display -->
+      <section class="card meter-card">
+        <div class="card-header">
+          <h2>LIVE ACOUSTIC LEVEL</h2>
+          <div class="acoustic-badge-container">
+            <span id="acoustic-classification" class="badge badge-quiet">SILENT / QUIET</span>
+          </div>
+        </div>
+
+        <div class="meter-viewport">
+          <!-- Canvas for Gauge/Arc Meter -->
+          <div class="gauge-container">
+            <canvas id="gauge-canvas" width="600" height="340"></canvas>
+            <div class="digital-readout">
+              <span id="db-value" class="db-number">--</span>
+              <span class="db-unit">dB SPL</span>
+            </div>
+          </div>
+
+          <!-- Zone Indicators Bar -->
+          <div class="zones-bar">
+            <div class="zone zone-quiet" id="zone-quiet">
+              <span class="zone-name">QUIET</span>
+              <span class="zone-range">&lt; 55 dB</span>
+            </div>
+            <div class="zone zone-moderate" id="zone-moderate">
+              <span class="zone-name">MODERATE</span>
+              <span class="zone-range">55 - 75 dB</span>
+            </div>
+            <div class="zone zone-loud" id="zone-loud">
+              <span class="zone-name">LOUD</span>
+              <span class="zone-range">&gt; 75 dB</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="heuristic-status-bar">
+          <div class="heuristic-indicator">
+            <span class="h-label">Acoustic Signal:</span>
+            <span id="h-signal-desc" class="h-value">Awaiting audio input...</span>
+          </div>
+          <div class="heuristic-meter-wrapper" title="Crowd chatter spectral disorder confidence">
+            <span class="h-label">Crowd Confidence:</span>
+            <div class="h-progress-track">
+              <div id="h-progress-fill" class="h-progress-fill" style="width: 0%;"></div>
+            </div>
+            <span id="h-confidence-pct" class="h-value">0%</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Control Panel Side -->
+      <aside class="dashboard-sidebar">
+        
+        <!-- Teacher Override Card -->
+        <section class="card override-card" id="override-container">
+          <div class="card-header">
+            <h3>TEACHER OVERRIDE</h3>
+            <span class="tooltip-icon" title="Temporarily ignores noise alerts while teacher is addressing the class">ℹ️</span>
+          </div>
+          
+          <button id="btn-teacher-override" class="btn btn-override" aria-pressed="false">
+            <span class="override-icon">🗣️</span>
+            <div class="override-text">
+              <span class="main-label">TEACHER SPEAKING</span>
+              <span id="override-subtext" class="sub-label">Click to suppress noise alerts</span>
+            </div>
+          </button>
+
+          <div id="override-timer-wrapper" class="override-timer-wrapper hidden">
+            <div class="timer-bar-track">
+              <div id="override-timer-bar" class="timer-bar-fill"></div>
+            </div>
+            <div class="timer-info">
+              <span>Auto-resets in: <strong id="override-countdown">45s</strong></span>
+              <button id="btn-cancel-override" class="btn-link">Disable Now</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Quick Noise Controls -->
+        <section class="card controls-card">
+          <div class="card-header">
+            <h3>ALERT THRESHOLDS</h3>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label-row">
+              <label for="threshold-slider">Noise Limit Threshold:</label>
+              <span id="threshold-val-display" class="control-value">70 dB</span>
+            </div>
+            <input type="range" id="threshold-slider" min="40" max="95" value="70" step="1" class="slider" />
+            <div class="slider-marks">
+              <span>40 dB</span>
+              <span>60 dB</span>
+              <span>80 dB</span>
+              <span>95 dB</span>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label-row">
+              <label for="debounce-slider">Sustained Noise Window:</label>
+              <span id="debounce-val-display" class="control-value">2.5 sec</span>
+            </div>
+            <input type="range" id="debounce-slider" min="1.0" max="5.0" value="2.5" step="0.5" class="slider" />
+            <span class="control-hint">Requires continuous crowd noise before alerting (prevents false alarms from dropped objects).</span>
+          </div>
+
+          <div class="toggles-grid">
+            <div class="toggle-item">
+              <div class="toggle-info">
+                <span class="toggle-title">Audio Buzzer</span>
+                <span class="toggle-sub">Play alarm synth tone</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggle-buzzer" checked />
+                <span class="slider-toggle"></span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <!-- Mic Connection Panel -->
+        <section id="mic-status-card" class="card mic-card">
+          <div class="mic-status-content">
+            <div id="mic-icon" class="mic-icon">🎙️</div>
+            <div class="mic-text">
+              <h4 id="mic-title">Microphone Status</h4>
+              <p id="mic-desc">Requesting microphone access...</p>
+            </div>
+            <button id="btn-request-mic" class="btn btn-sm btn-secondary hidden">Allow Mic</button>
+          </div>
+        </section>
+
+      </aside>
+    </main>
+
+    <!-- Footer / Micro Disclaimer -->
+    <footer class="app-footer">
+      <span>Classroom Noise Meter &bull; Client-Side Web Audio Engine &bull; Zero Server Transmission</span>
+      <span>Best-Effort Acoustic Heuristic (Voice Spectrum vs Multi-Speaker Disorder)</span>
+    </footer>
+  </div>
+
+  <!-- Audio Permission Modal Overlay -->
+  <div id="permission-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>🎙️ MICROPHONE ACCESS REQUIRED</h2>
+      </div>
+      <div class="modal-body">
+        <p>This application analyzes room acoustics locally using your web browser's Web Audio API.</p>
+        <p>Please click <strong>"Grant Microphone Access"</strong> and allow permissions when prompted by your browser.</p>
+        <div class="permission-note">
+          <span class="note-icon">🔒</span>
+          <span><strong>Privacy Guarantee:</strong> Audio data is processed live in device memory only. No audio is ever recorded, saved, or transmitted to any server.</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-grant-mic-modal" class="btn btn-primary btn-lg">GRANT MICROPHONE ACCESS</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Drawer / Modal -->
+  <div id="settings-modal" class="modal-backdrop hidden">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <h2>⚙️ SYSTEM SETTINGS</h2>
+        <button id="btn-close-settings" class="btn-close" aria-label="Close Settings">&times;</button>
+      </div>
+      <div class="modal-body settings-body">
+        
+        <!-- Section: Acoustic Heuristic Calibration -->
+        <div class="settings-section">
+          <h3>Acoustic Classification Sensitivity</h3>
+          <p class="settings-desc">Adjust how aggressively the system attempts to differentiate multi-speaker crowd chatter from a single teacher voice.</p>
+          
+          <div class="control-group">
+            <div class="control-label-row">
+              <label for="spectral-sensitivity-slider">Crowd Chatter Sensitivity:</label>
+              <span id="sensitivity-val-display" class="control-value">Medium (65%)</span>
+            </div>
+            <input type="range" id="spectral-sensitivity-slider" min="30" max="90" value="65" step="5" class="slider" />
+          </div>
+
+          <div class="control-group">
+            <div class="control-label-row">
+              <label for="override-timeout-select">Teacher Override Auto-Reset Timeout:</label>
+            </div>
+            <select id="override-timeout-select" class="select-input">
+              <option value="30">30 Seconds</option>
+              <option value="45" selected>45 Seconds</option>
+              <option value="60">60 Seconds</option>
+              <option value="90">90 Seconds</option>
+              <option value="0">Manual Only (No Auto-Reset)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Section: Webcam Snapshot Logging -->
+        <div class="settings-section">
+          <h3>📷 Frequent Talker Webcam Logging (Optional)</h3>
+          <p class="settings-desc">Captures a general classroom snapshot frame on every 5th noise alert (5, 10, 15...) for end-of-class teacher review.</p>
+          
+          <div id="webcam-hardware-alert" class="hardware-alert hidden">
+            <span>⚠️ No webcam hardware detected on this device. Camera logging disabled.</span>
+          </div>
+
+          <div class="toggle-item webcam-toggle-row">
+            <div class="toggle-info">
+              <span class="toggle-title">Enable Camera Log</span>
+              <span class="toggle-sub">Requires camera permission</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-webcam" />
+              <span class="slider-toggle"></span>
+            </label>
+          </div>
+
+          <div id="webcam-options-panel" class="webcam-options hidden">
+            <div class="control-group">
+              <label for="webcam-select">Select Camera Device:</label>
+              <select id="webcam-select" class="select-input">
+                <option value="">Default Web Camera</option>
+              </select>
+            </div>
+
+            <div class="privacy-box">
+              <h4>🔒 LOCAL PRIVACY GUARANTEE</h4>
+              <p>Webcam snapshots capture a broad classroom view at the moment of frequent noise alerts. <strong>All photos remain 100% strictly local to this browser session</strong> (stored in local device memory/IndexedDB). No photos are ever uploaded or sent anywhere. Please clear or download photos after class.</p>
+              <div class="privacy-actions">
+                <button id="btn-clear-photos-settings" class="btn btn-secondary btn-sm">Clear Stored Snapshots (<span id="photo-count-badge">0</span>)</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button id="btn-save-settings" class="btn btn-primary">SAVE &amp; CLOSE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- End of Class Session Summary Modal -->
+  <div id="session-modal" class="modal-backdrop hidden">
+    <div class="modal-card modal-xl">
+      <div class="modal-header">
+        <h2>📊 CLASS SESSION SUMMARY</h2>
+        <button id="btn-close-session" class="btn-close" aria-label="Close Summary">&times;</button>
+      </div>
+      <div class="modal-body session-body">
+        
+        <!-- Stats Summary Grid -->
+        <div class="summary-stats-grid">
+          <div class="summary-card">
+            <span class="summary-title">TOTAL CLASS DURATION</span>
+            <span id="sum-duration" class="summary-value">00:00:00</span>
+          </div>
+          <div class="summary-card">
+            <span class="summary-title">TOTAL NOISE ALERTS</span>
+            <span id="sum-alerts" class="summary-value">0</span>
+          </div>
+          <div class="summary-card">
+            <span class="summary-title">LONGEST QUIET STREAK</span>
+            <span id="sum-longest-streak" class="summary-value">00:00</span>
+          </div>
+          <div class="summary-card">
+            <span class="summary-title">AVERAGE NOISE LEVEL</span>
+            <span id="sum-avg-db" class="summary-value">-- dB</span>
+          </div>
+        </div>
+
+        <!-- Photo Gallery Review Section -->
+        <div class="summary-gallery-section">
+          <div class="gallery-header">
+            <h3>📷 CLASSROOM NOISE LOG PHOTOS (<span id="gallery-count">0</span>)</h3>
+            <div class="gallery-actions">
+              <button id="btn-download-all-photos" class="btn btn-secondary btn-sm" disabled>Download All</button>
+              <button id="btn-clear-gallery" class="btn btn-secondary btn-sm" disabled>Clear Photos</button>
+            </div>
+          </div>
+          <p class="gallery-hint">Snapshots automatically captured on every 5th sustained noise trigger:</p>
+          
+          <div id="gallery-grid" class="gallery-grid">
+            <div class="empty-gallery">
+              <span class="empty-icon">📷</span>
+              <p>No snapshots captured during this session.</p>
+              <span class="empty-sub">Snapshots are logged every 5th noise alert when camera logging is enabled.</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button id="btn-new-session" class="btn btn-primary">START NEW SESSION</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden Video element used for camera frame capturing -->
+  <video id="hidden-video" style="display: none;" playsinline autoplay muted></video>
+
+  <!-- Application Bundle -->
+  <script type="module" src="/src/ui/app.js"></script>
+</body>
+</html>
