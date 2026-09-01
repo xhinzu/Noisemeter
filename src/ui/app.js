@@ -323,26 +323,28 @@ class ClassroomNoiseMeterApp {
       });
     }
 
-    // Mic Access Buttons
-    this.btnGrantMicModal.addEventListener('click', () => this.startAudioStream());
-    this.btnRequestMic.addEventListener('click', () => this.startAudioStream());
-
     // Sliders
-    this.thresholdSlider.addEventListener('input', (e) => {
-      const val = parseFloat(e.target.value);
-      this.thresholdValDisplay.textContent = `${val} dB`;
-      this.alertSystem.setThreshold(val);
-    });
+    if (this.thresholdSlider) {
+      this.thresholdSlider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        if (this.thresholdValDisplay) this.thresholdValDisplay.textContent = `${val} dB`;
+        this.alertSystem.setThreshold(val);
+      });
+    }
 
-    this.debounceSlider.addEventListener('input', (e) => {
-      const val = parseFloat(e.target.value);
-      this.debounceValDisplay.textContent = `${val} sec`;
-      this.alertSystem.setDebounce(val);
-    });
+    if (this.debounceSlider) {
+      this.debounceSlider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        if (this.debounceValDisplay) this.debounceValDisplay.textContent = `${val} sec`;
+        this.alertSystem.setDebounce(val);
+      });
+    }
 
-    this.toggleBuzzer.addEventListener('change', (e) => {
-      this.buzzer.setEnabled(e.target.checked);
-    });
+    if (this.toggleBuzzer) {
+      this.toggleBuzzer.addEventListener('change', (e) => {
+        this.buzzer.setEnabled(e.target.checked);
+      });
+    }
 
     if (this.btnTestBuzzer) {
       this.btnTestBuzzer.addEventListener('click', () => {
@@ -355,89 +357,113 @@ class ClassroomNoiseMeterApp {
       });
     }
 
-    // Mic Access Buttons
+    // Mic Access Modal Button
     if (this.btnGrantMicModal) {
       this.btnGrantMicModal.addEventListener('click', () => this.startAudioStream());
     }
 
     // Modals
-    this.btnSettings.addEventListener('click', () => {
-      this.settingsModal.classList.remove('hidden');
-    });
+    if (this.btnSettings) {
+      this.btnSettings.addEventListener('click', () => {
+        if (this.settingsModal) this.settingsModal.classList.remove('hidden');
+      });
+    }
 
-    this.btnCloseSettings.addEventListener('click', () => {
-      this.settingsModal.classList.add('hidden');
-    });
+    if (this.btnCloseSettings) {
+      this.btnCloseSettings.addEventListener('click', () => {
+        if (this.settingsModal) this.settingsModal.classList.add('hidden');
+      });
+    }
 
-    this.btnSaveSettings.addEventListener('click', () => {
-      this.settingsModal.classList.add('hidden');
-    });
+    if (this.btnSaveSettings) {
+      this.btnSaveSettings.addEventListener('click', () => {
+        if (this.settingsModal) this.settingsModal.classList.add('hidden');
+      });
+    }
 
-    this.spectralSensitivitySlider.addEventListener('input', (e) => {
-      const val = parseInt(e.target.value, 10);
-      this.sensitivityValDisplay.textContent = `${val}%`;
-      this.audioEngine.setSensitivity(val / 100);
-    });
+    if (this.spectralSensitivitySlider) {
+      this.spectralSensitivitySlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        if (this.sensitivityValDisplay) this.sensitivityValDisplay.textContent = `${val}%`;
+        this.audioEngine.setSensitivity(val / 100);
+      });
+    }
 
     // Webcam Toggle
-    this.toggleWebcam.addEventListener('change', async (e) => {
-      if (e.target.checked) {
-        try {
-          await this.snapshotManager.enableCamera(this.webcamSelect.value || null);
-          this.webcamOptionsPanel.classList.remove('hidden');
-        } catch (err) {
-          alert("Could not access webcam. Please check camera browser permissions.");
-          e.target.checked = false;
+    if (this.toggleWebcam) {
+      this.toggleWebcam.addEventListener('change', async (e) => {
+        if (e.target.checked) {
+          try {
+            await this.snapshotManager.enableCamera(this.webcamSelect ? this.webcamSelect.value : null);
+            if (this.webcamOptionsPanel) this.webcamOptionsPanel.classList.remove('hidden');
+          } catch (err) {
+            alert("Could not access webcam. Please check camera browser permissions.");
+            e.target.checked = false;
+          }
+        } else {
+          this.snapshotManager.stopCamera();
+          if (this.webcamOptionsPanel) this.webcamOptionsPanel.classList.add('hidden');
         }
-      } else {
-        this.snapshotManager.stopCamera();
-        this.webcamOptionsPanel.classList.add('hidden');
-      }
-    });
+      });
+    }
 
-    this.webcamSelect.addEventListener('change', async (e) => {
-      if (this.toggleWebcam.checked) {
-        await this.snapshotManager.enableCamera(e.target.value);
-      }
-    });
+    if (this.webcamSelect) {
+      this.webcamSelect.addEventListener('change', async (e) => {
+        if (this.toggleWebcam && this.toggleWebcam.checked) {
+          await this.snapshotManager.enableCamera(e.target.value);
+        }
+      });
+    }
 
-    this.btnClearPhotosSettings.addEventListener('click', () => {
-      if (confirm("Are you sure you want to clear all locally stored session snapshots?")) {
-        this.snapshotManager.clearAllSnapshots();
-      }
-    });
+    if (this.btnClearPhotosSettings) {
+      this.btnClearPhotosSettings.addEventListener('click', () => {
+        if (confirm("Are you sure you want to clear all locally stored session snapshots?")) {
+          this.snapshotManager.clearAllSnapshots();
+        }
+      });
+    }
 
     // End Session Button
-    this.btnEndSession.addEventListener('click', () => {
-      this.showSessionSummary();
-    });
+    if (this.btnEndSession) {
+      this.btnEndSession.addEventListener('click', () => {
+        this.showSessionSummary();
+      });
+    }
 
-    this.btnCloseSession.addEventListener('click', () => {
-      this.sessionModal.classList.add('hidden');
-    });
+    if (this.btnCloseSession) {
+      this.btnCloseSession.addEventListener('click', () => {
+        if (this.sessionModal) this.sessionModal.classList.add('hidden');
+      });
+    }
 
-    this.btnNewSession.addEventListener('click', () => {
-      this.sessionModal.classList.add('hidden');
-      this.alertSystem.resetSession();
-      this.snapshotManager.clearAllSnapshots();
-      this.sessionTracker.stop();
-      this.alertCountDisplay.textContent = "0";
-      this.sessionTimerDisplay.textContent = "00:00";
-      this.streakDisplay.textContent = "00:00";
-      if (this.startSessionModal) {
-        this.startSessionModal.classList.remove('hidden');
-      }
-    });
-
-    this.btnClearGallery.addEventListener('click', () => {
-      if (confirm("Clear all captured class photos?")) {
+    if (this.btnNewSession) {
+      this.btnNewSession.addEventListener('click', () => {
+        if (this.sessionModal) this.sessionModal.classList.add('hidden');
+        this.alertSystem.resetSession();
         this.snapshotManager.clearAllSnapshots();
-      }
-    });
+        this.sessionTracker.stop();
+        if (this.alertCountDisplay) this.alertCountDisplay.textContent = "0";
+        if (this.sessionTimerDisplay) this.sessionTimerDisplay.textContent = "00:00";
+        if (this.streakDisplay) this.streakDisplay.textContent = "00:00";
+        if (this.startSessionModal) {
+          this.startSessionModal.classList.remove('hidden');
+        }
+      });
+    }
 
-    this.btnDownloadAllPhotos.addEventListener('click', () => {
-      this.downloadAllSnapshots();
-    });
+    if (this.btnClearGallery) {
+      this.btnClearGallery.addEventListener('click', () => {
+        if (confirm("Clear all captured class photos?")) {
+          this.snapshotManager.clearAllSnapshots();
+        }
+      });
+    }
+
+    if (this.btnDownloadAllPhotos) {
+      this.btnDownloadAllPhotos.addEventListener('click', () => {
+        this.downloadAllSnapshots();
+      });
+    }
   }
 
   async startAudioStream() {
