@@ -9,6 +9,10 @@ import { TeacherOverride } from '../core/teacherOverride.js';
 import { SnapshotManager } from '../camera/snapshotManager.js';
 import { SessionTracker } from '../core/sessionTracker.js';
 
+import { ConfettiEngine } from '../inauguration/confetti.js';
+import { FanfareAudio } from '../inauguration/fanfare.js';
+import { InaugurationManager } from '../inauguration/inaugurationManager.js';
+
 class ClassroomNoiseMeterApp {
   constructor() {
     // Core Modules
@@ -17,6 +21,12 @@ class ClassroomNoiseMeterApp {
     this.alertSystem = new AlertSystem(this.buzzer);
     this.teacherOverride = new TeacherOverride(this.alertSystem);
     this.sessionTracker = new SessionTracker();
+
+    // RISE 2026 Inauguration Modules
+    this.confettiCanvas = document.getElementById('confetti-canvas');
+    this.confettiEngine = new ConfettiEngine(this.confettiCanvas);
+    this.fanfareAudio = new FanfareAudio();
+    this.inaugurationManager = new InaugurationManager(this.confettiEngine, this.fanfareAudio);
 
     this.videoEl = document.getElementById('hidden-video');
     this.snapshotManager = new SnapshotManager(this.videoEl);
@@ -128,6 +138,17 @@ class ClassroomNoiseMeterApp {
     this.btnDownloadAllPhotos = document.getElementById('btn-download-all-photos');
     this.btnClearGallery = document.getElementById('btn-clear-gallery');
 
+    // RISE 2026 Inauguration DOM Elements
+    this.btnInaugurationMode = document.getElementById('btn-inauguration-mode');
+    this.inaugurationBannerCard = document.getElementById('inauguration-banner-card');
+    this.cheerPowerVal = document.getElementById('cheer-power-val');
+    this.cheerProgressFill = document.getElementById('cheer-progress-fill');
+    this.btnManualInaugurate = document.getElementById('btn-manual-inaugurate');
+    this.inaugurationRevealModal = document.getElementById('inauguration-reveal-modal');
+    this.btnReplayCelebration = document.getElementById('btn-replay-celebration');
+    this.btnResetCheer = document.getElementById('btn-reset-cheer');
+    this.btnCloseReveal = document.getElementById('btn-close-reveal');
+
     // Sync input values from state
     this.thresholdSlider.value = this.alertSystem.thresholdDb;
     this.thresholdValDisplay.textContent = `${this.alertSystem.thresholdDb} dB`;
@@ -214,6 +235,61 @@ class ClassroomNoiseMeterApp {
       this.galleryCount.textContent = list.length.toString();
       this.renderGallery(list);
     };
+
+    // 6. RISE 2026 Inauguration Callbacks & Controls
+    this.inaugurationManager.onCheerPowerUpdate = (pct) => {
+      if (this.cheerPowerVal) this.cheerPowerVal.textContent = `${pct}%`;
+      if (this.cheerProgressFill) this.cheerProgressFill.style.width = `${pct}%`;
+    };
+
+    this.inaugurationManager.onInaugurationTriggered = () => {
+      if (this.inaugurationRevealModal) {
+        this.inaugurationRevealModal.classList.remove('hidden');
+      }
+    };
+
+    this.inaugurationManager.onModeStateChange = (active, revealed) => {
+      if (active) {
+        if (this.inaugurationBannerCard) this.inaugurationBannerCard.classList.remove('hidden');
+        if (this.btnInaugurationMode) this.btnInaugurationMode.classList.add('active-mode');
+      } else {
+        if (this.inaugurationBannerCard) this.inaugurationBannerCard.classList.add('hidden');
+        if (this.btnInaugurationMode) this.btnInaugurationMode.classList.remove('active-mode');
+        if (this.inaugurationRevealModal) this.inaugurationRevealModal.classList.add('hidden');
+      }
+    };
+
+    if (this.btnInaugurationMode) {
+      this.btnInaugurationMode.addEventListener('click', () => {
+        this.inaugurationManager.toggleMode();
+      });
+    }
+
+    if (this.btnManualInaugurate) {
+      this.btnManualInaugurate.addEventListener('click', () => {
+        this.inaugurationManager.triggerInauguration();
+      });
+    }
+
+    if (this.btnReplayCelebration) {
+      this.btnReplayCelebration.addEventListener('click', () => {
+        this.inaugurationManager.replayCelebration();
+      });
+    }
+
+    if (this.btnResetCheer) {
+      this.btnResetCheer.addEventListener('click', () => {
+        if (this.inaugurationRevealModal) this.inaugurationRevealModal.classList.add('hidden');
+        this.inaugurationManager.resetCheer();
+      });
+    }
+
+    if (this.btnCloseReveal) {
+      this.btnCloseReveal.addEventListener('click', () => {
+        if (this.inaugurationRevealModal) this.inaugurationRevealModal.classList.add('hidden');
+        this.confettiEngine.stop();
+      });
+    }
 
     // --- UI Control Event Listeners ---
 
@@ -401,6 +477,9 @@ class ClassroomNoiseMeterApp {
 
     // Process Alert State Machine
     const alertResult = this.alertSystem.processFrame(frameData);
+
+    // Feed real-time decibel frames to Inauguration Manager
+    this.inaugurationManager.processAudioFrame(db);
 
     // Record sample to Session Tracker
     this.sessionTracker.recordAudioFrame(db, alertResult.isAlertActive);

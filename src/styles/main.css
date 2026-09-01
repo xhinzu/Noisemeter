@@ -1012,3 +1012,216 @@ input:checked + .slider-toggle:before {
     font-size: 1.75rem;
   }
 }
+
+/* ==========================================================================
+   RISE 2026 INAUGURATION MODE & CELEBRATION STYLES
+   ========================================================================== */
+
+/* Mode Toggle Button in Header */
+.btn-inauguration {
+  background: linear-gradient(135deg, #ffd700 0%, #ff1493 50%, #7b68ee 100%);
+  color: #000000;
+  font-weight: 900;
+  border: none;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-inauguration:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
+}
+
+.btn-inauguration-glow {
+  background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+  color: #000000;
+  font-weight: 900;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  transition: all 0.2s ease;
+}
+
+.btn-inauguration-glow:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 35px rgba(255, 215, 0, 0.85);
+}
+
+/* Inauguration Banner Card (Active during Inauguration Mode) */
+.inauguration-banner-card {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, rgba(30, 27, 75, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 2px solid #ffd700;
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  animation: pulse-border 2s infinite ease-in-out;
+}
+
+@keyframes pulse-border {
+  0%, 100% { border-color: #ffd700; box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); }
+  50% { border-color: #ff1493; box-shadow: 0 0 35px rgba(255, 20, 147, 0.5); }
+}
+
+.inauguration-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.inauguration-title-badge {
+  font-weight: 900;
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.inauguration-sub {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.cheer-meter-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.cheer-label-row {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: #ffffff;
+}
+
+.cheer-power-val {
+  color: #ffd700;
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+}
+
+.cheer-progress-track {
+  height: 22px;
+  background: var(--bg-surface);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  position: relative;
+}
+
+.cheer-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff1493 0%, #ffd700 70%, #00ffff 100%);
+  border-radius: 12px;
+  transition: width 0.15s ease-out;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+}
+
+.inauguration-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Canvas Confetti Layer */
+.confetti-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* Grand Reveal Slide Celebration Modal */
+.celebration-modal-backdrop {
+  background: rgba(5, 5, 15, 0.88);
+  backdrop-filter: blur(12px);
+  z-index: 9999;
+}
+
+.reveal-card {
+  background: linear-gradient(145deg, rgba(20, 20, 35, 0.98) 0%, rgba(10, 10, 20, 0.98) 100%);
+  border: 3px solid #ffd700;
+  box-shadow: 0 0 60px rgba(255, 215, 0, 0.4), inset 0 0 30px rgba(255, 215, 0, 0.1);
+  text-align: center;
+  padding: 2.5rem;
+  max-width: 650px;
+  width: 90%;
+  border-radius: 24px;
+}
+
+.fest-badge {
+  display: inline-block;
+  background: linear-gradient(90deg, #ffd700, #ff1493);
+  color: #000000;
+  font-weight: 900;
+  font-size: 0.85rem;
+  padding: 0.35rem 1rem;
+  border-radius: 20px;
+  letter-spacing: 0.1em;
+  margin-bottom: 1rem;
+}
+
+.reveal-title {
+  font-size: 4rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  background: linear-gradient(135deg, #ffffff 0%, #ffd700 50%, #00ffff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0.5rem 0;
+  text-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+}
+
+.animate-glow {
+  animation: glow-pulse 2s infinite ease-in-out;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6)); }
+  50% { filter: drop-shadow(0 0 30px rgba(0, 255, 255, 0.9)); }
+}
+
+.reveal-subtitle {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #ffd700;
+  margin-bottom: 1rem;
+}
+
+.reveal-desc {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.reveal-ribbon-decor {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #00ffff;
+  letter-spacing: 0.15em;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  display: inline-block;
+  margin-bottom: 1.5rem;
+}
+
+.reveal-footer {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
