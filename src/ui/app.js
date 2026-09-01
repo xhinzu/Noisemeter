@@ -505,8 +505,8 @@ class ClassroomNoiseMeterApp {
     ctx.clearRect(0, 0, width, height);
 
     const centerX = width / 2;
-    const centerY = height - 40;
-    const radius = 220;
+    const centerY = height - 25;
+    const radius = 180;
 
     const startAngle = Math.PI * 0.85; // ~153 deg
     const endAngle = Math.PI * 2.15;   // ~387 deg
