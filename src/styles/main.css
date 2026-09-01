@@ -775,6 +775,34 @@ input:checked + .slider-toggle:before {
   max-width: 1000px;
 }
 
+.modal-compact {
+  max-width: 320px;
+  padding: 0.5rem;
+  border-radius: var(--radius-lg);
+}
+
+.compact-body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.75rem 0.5rem;
+}
+
+.btn-start-glow {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-start-glow:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 35px rgba(255, 255, 255, 0.75);
+}
+
 .modal-header {
   display: flex;
   align-items: center;
