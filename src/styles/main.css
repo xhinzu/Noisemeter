@@ -1241,3 +1241,114 @@ input:checked + .slider-toggle:before {
   flex-wrap: wrap;
 }
 
+/* ==========================================================================
+   LIVE SUBTITLES COMPONENT (ENGLISH & MALAYALAM)
+   ========================================================================== */
+
+.subtitles-container {
+  margin-top: 1rem;
+  background: rgba(18, 18, 24, 0.8);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.4);
+}
+
+.subtitles-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.subtitles-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+}
+
+.subtitles-lang-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.btn-lang {
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-lang:hover {
+  border-color: #ffd700;
+  color: #ffffff;
+}
+
+.btn-lang.active-lang {
+  background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+  color: #000000;
+  border-color: #ffd700;
+  font-weight: 900;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+}
+
+.btn-sub-toggle {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-sub-toggle:hover {
+  background: var(--border-subtle);
+}
+
+.subtitles-viewport {
+  min-height: 48px;
+  max-height: 72px;
+  background: rgba(10, 10, 15, 0.95);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.85rem;
+  overflow-y: auto;
+  display: flex;
+  align-items: center;
+}
+
+.subtitles-text {
+  font-family: 'Noto Sans Malayalam', 'Segoe UI', 'Kartika', 'Arial Unicode MS', var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: #00ffff;
+  font-weight: 600;
+  width: 100%;
+  word-break: break-word;
+}
+
+.subtitles-placeholder {
+  color: var(--text-tertiary);
+  font-style: italic;
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+

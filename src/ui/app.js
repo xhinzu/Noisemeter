@@ -12,6 +12,7 @@ import { SessionTracker } from '../core/sessionTracker.js';
 import { ConfettiEngine } from '../inauguration/confetti.js';
 import { FanfareAudio } from '../inauguration/fanfare.js';
 import { InaugurationManager } from '../inauguration/inaugurationManager.js';
+import { SpeechRecognitionManager } from '../audio/speechRecognition.js';
 
 class ClassroomNoiseMeterApp {
   constructor() {
@@ -21,6 +22,9 @@ class ClassroomNoiseMeterApp {
     this.alertSystem = new AlertSystem(this.buzzer);
     this.teacherOverride = new TeacherOverride(this.alertSystem);
     this.sessionTracker = new SessionTracker();
+
+    // Speech Recognition Live Subtitles (English & Malayalam)
+    this.speechRecognition = new SpeechRecognitionManager();
 
     // RISE 2026 Inauguration Modules
     this.confettiCanvas = document.getElementById('confetti-canvas');
@@ -146,6 +150,14 @@ class ClassroomNoiseMeterApp {
     this.btnManualInaugurate = document.getElementById('btn-manual-inaugurate');
     this.inaugurationRevealModal = document.getElementById('inauguration-reveal-modal');
     this.btnCloseRevealTop = document.getElementById('btn-close-reveal-top');
+
+    // Live Subtitles DOM Elements
+    this.subtitlesBox = document.getElementById('subtitles-box');
+    this.subtitlesText = document.getElementById('subtitles-text');
+    this.speechStatusBadge = document.getElementById('speech-status-badge');
+    this.btnLangEn = document.getElementById('btn-lang-en');
+    this.btnLangMl = document.getElementById('btn-lang-ml');
+    this.btnToggleSubtitles = document.getElementById('btn-toggle-subtitles');
 
     // Sync input values from state
     this.thresholdSlider.value = this.alertSystem.thresholdDb;
@@ -284,6 +296,55 @@ class ClassroomNoiseMeterApp {
         if (e.target === this.inaugurationRevealModal) {
           closeReveal();
         }
+      });
+    }
+
+    // 7. Live Subtitles Event Listeners & Callbacks (English & Malayalam)
+    this.speechRecognition.onTranscriptUpdate = (text, lang) => {
+      if (this.subtitlesText) {
+        if (text.trim()) {
+          this.subtitlesText.innerHTML = `<span class="transcript-live">${text}</span>`;
+        } else {
+          this.subtitlesText.innerHTML = `<span class="subtitles-placeholder">Speak into your microphone to view live subtitles in English or Malayalam...</span>`;
+        }
+      }
+    };
+
+    this.speechRecognition.onStatusChange = (isListening, lang, isSupported) => {
+      if (this.speechStatusBadge) {
+        if (!isSupported) {
+          this.speechStatusBadge.textContent = "Speech Unsupported";
+          this.speechStatusBadge.className = "badge badge-quiet";
+        } else if (isListening) {
+          this.speechStatusBadge.textContent = lang === 'ml-IN' ? "മലയാളം LIVE" : "ENGLISH LIVE";
+          this.speechStatusBadge.className = "badge badge-crowd";
+        } else {
+          this.speechStatusBadge.textContent = "Subtitles Off";
+          this.speechStatusBadge.className = "badge badge-quiet";
+        }
+      }
+    };
+
+    if (this.btnLangEn) {
+      this.btnLangEn.addEventListener('click', () => {
+        this.btnLangEn.classList.add('active-lang');
+        if (this.btnLangMl) this.btnLangMl.classList.remove('active-lang');
+        this.speechRecognition.setLanguage('en-IN');
+      });
+    }
+
+    if (this.btnLangMl) {
+      this.btnLangMl.addEventListener('click', () => {
+        this.btnLangMl.classList.add('active-lang');
+        if (this.btnLangEn) this.btnLangEn.classList.remove('active-lang');
+        this.speechRecognition.setLanguage('ml-IN');
+      });
+    }
+
+    if (this.btnToggleSubtitles) {
+      this.btnToggleSubtitles.addEventListener('click', () => {
+        const isEnabled = this.speechRecognition.toggle();
+        this.btnToggleSubtitles.textContent = isEnabled ? "🎙️ ON" : "🔇 OFF";
       });
     }
 
@@ -432,6 +493,7 @@ class ClassroomNoiseMeterApp {
       this.btnRequestMic.classList.add('hidden');
 
       await this.audioEngine.start();
+      this.speechRecognition.start();
     } catch (err) {
       this.permissionModal.classList.remove('hidden');
     }
