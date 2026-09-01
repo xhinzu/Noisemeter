@@ -1,13 +1,7 @@
 /**
- * Bloom Inauguration Manager
- * Recreates the exact Bloomy AR Webcam Painting Interface:
- * - Live selfie mirrored video stream background
- * - Top glassmorphic brand pill ("🌸 Flower Wand 315")
- * - Bottom status pill ("✨ Point to plant · Open your hand to scatter")
- * - NO 3 bottom action buttons
- * - Pre-planted block of 315 blooming flowers on top of live camera feed
- * - Open palm hand gesture / pointer sweep unsticks flowers with explosion physics
- * - Reveals "RISE 2026" (Floral font) & "IS OFFICIALLY INAUGURATED! 🎉"
+ * Bloom Inauguration Manager - High Performance AR Flower Scattering Engine
+ * Optimized for 60fps performance with throttled MediaPipe landmarker,
+ * low-latency desynchronized canvas 2D rendering, and swap-delete particle physics.
  */
 
 import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
@@ -43,11 +37,13 @@ export class BloomInauguration {
     this.isHandTrackerReady = false;
     this.hasTriggeredScatter = false;
     this.scatteredCount = 0;
-    this.totalFlowers = 315;
+    this.totalFlowers = 154;
     this.onScatterComplete = null;
 
-    this.counterBadge = null;
-    this.statusPill = null;
+    // Performance throttling
+    this.frameCounter = 0;
+    this.lastPalmPositions = [];
+    this.detectionThrottleFrames = 2; // Run landmarker every 2nd frame (30fps detection, 60fps render)
   }
 
   /**
@@ -63,10 +59,10 @@ export class BloomInauguration {
         spriteCanvas.height = 64;
         const ctx = spriteCanvas.getContext('2d');
 
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-        ctx.shadowBlur = 6;
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+        ctx.shadowBlur = 4;
         ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 3;
+        ctx.shadowOffsetY = 2;
 
         ctx.font = '46px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
         ctx.textAlign = 'center';
@@ -121,33 +117,32 @@ export class BloomInauguration {
   }
 
   /**
-   * Populate pre-planted flower block over center text area (315 flowers)
+   * Populate pre-planted flower block over center text area (154 flowers)
    */
   createFlowerBlock(width, height) {
     this.flowers = [];
     this.hasTriggeredScatter = false;
     this.scatteredCount = 0;
-    this.totalFlowers = 315;
 
-    const blockWidth = Math.min(width * 0.85, 680);
-    const blockHeight = Math.min(height * 0.6, 300);
+    const blockWidth = Math.min(width * 0.82, 640);
+    const blockHeight = Math.min(height * 0.58, 280);
     const startX = (width - blockWidth) / 2;
     const startY = (height - blockHeight) / 2;
 
-    const rows = 15;
-    const cols = 21; // 15 x 21 = 315 flowers!
+    const rows = 11;
+    const cols = 14; // 11 x 14 = 154 flowers
     const stepX = blockWidth / cols;
     const stepY = blockHeight / rows;
 
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
-        const jitterX = (Math.random() - 0.5) * stepX * 0.8;
-        const jitterY = (Math.random() - 0.5) * stepY * 0.8;
+        const jitterX = (Math.random() - 0.5) * stepX * 0.75;
+        const jitterY = (Math.random() - 0.5) * stepY * 0.75;
         const fx = startX + c * stepX + stepX / 2 + jitterX;
         const fy = startY + r * stepY + stepY / 2 + jitterY;
 
         const spriteIndex = Math.floor(Math.random() * this.sprites.length);
-        const baseSize = 38 + Math.random() * 16;
+        const baseSize = 44 + Math.random() * 16;
 
         this.flowers.push({
           x: fx,
@@ -168,9 +163,7 @@ export class BloomInauguration {
       }
     }
 
-    if (this.counterBadge) {
-      this.counterBadge.textContent = this.totalFlowers.toString();
-    }
+    this.totalFlowers = this.flowers.length;
   }
 
   /**
@@ -178,11 +171,10 @@ export class BloomInauguration {
    */
   async start(canvasEl, videoEl, onCompleteCallback) {
     this.canvas = canvasEl;
-    this.ctx = canvasEl.getContext('2d');
+    this.ctx = canvasEl.getContext('2d', { alpha: true, desynchronized: true });
     this.onScatterComplete = onCompleteCallback;
-
-    this.counterBadge = document.getElementById('bloom-flower-count');
-    this.statusPill = document.getElementById('bloom-status-pill');
+    this.frameCounter = 0;
+    this.lastPalmPositions = [];
 
     // Auto-resize canvas to match container bounds
     const container = canvasEl.parentElement;
@@ -235,7 +227,8 @@ export class BloomInauguration {
   scatterFromPoint(px, py, radius = 180) {
     const radiusSq = radius * radius;
 
-    for (let flower of this.flowers) {
+    for (let i = 0; i < this.flowers.length; i++) {
+      const flower = this.flowers[i];
       if (flower.state !== 'planted') continue;
 
       const dx = flower.x - px;
@@ -247,53 +240,53 @@ export class BloomInauguration {
         this.scatteredCount++;
 
         const dist = Math.sqrt(distSq) || 1;
-        const speed = 8 + Math.random() * 14;
+        const speed = 9 + Math.random() * 12;
         flower.vx = (dx / dist) * speed + (Math.random() - 0.5) * 4;
         flower.vy = (dy / dist) * speed - (2 + Math.random() * 6);
         flower.vRot = (Math.random() - 0.5) * 0.25;
       }
     }
 
-    const remaining = Math.max(0, this.totalFlowers - this.scatteredCount);
-    if (this.counterBadge) {
-      this.counterBadge.textContent = remaining.toString();
-    }
-
-    if (this.scatteredCount > 10 && this.statusPill) {
-      this.statusPill.innerHTML = `<span>🌸</span><span>Scattering flowers!</span>`;
-      this.statusPill.classList.add('scattering');
-    }
-
-    // Trigger complete callback when >35% flowers scattered
-    if (!this.hasTriggeredScatter && this.scatteredCount > this.totalFlowers * 0.35) {
+    // Trigger complete callback when >30% flowers scattered (No second confetti pop!)
+    if (!this.hasTriggeredScatter && this.scatteredCount > this.totalFlowers * 0.3) {
       this.hasTriggeredScatter = true;
       if (this.onScatterComplete) this.onScatterComplete();
     }
   }
 
   /**
-   * Process video frame with MediaPipe to detect open palm
+   * Process video frame with MediaPipe (Throttled to 30Hz for 60fps smooth canvas rendering)
    */
   detectHandGesture() {
     if (!this.isHandTrackerReady || !this.video || this.video.readyState < 2) return;
 
-    try {
-      const results = this.handLandmarker.detectForVideo(this.video, performance.now());
-      if (results.landmarks && results.landmarks.length > 0) {
-        for (let landmarks of results.landmarks) {
-          const wrist = landmarks[0];
-          const indexTip = landmarks[8];
-          const middleTip = landmarks[12];
+    this.frameCounter++;
+    
+    // Only run MediaPipe inference every Nth frame to preserve CPU/GPU
+    if (this.frameCounter % this.detectionThrottleFrames === 0) {
+      try {
+        const results = this.handLandmarker.detectForVideo(this.video, performance.now());
+        this.lastPalmPositions = [];
+        if (results.landmarks && results.landmarks.length > 0) {
+          for (let landmarks of results.landmarks) {
+            const wrist = landmarks[0];
+            const indexTip = landmarks[8];
+            const middleTip = landmarks[12];
 
-          // Mirror X for selfie video matching
-          const palmX = (1 - (wrist.x + indexTip.x + middleTip.x) / 3) * this.canvas.width;
-          const palmY = ((wrist.y + indexTip.y + middleTip.y) / 3) * this.canvas.height;
-
-          this.scatterFromPoint(palmX, palmY, 220);
+            // Mirror X for selfie video matching
+            const palmX = (1 - (wrist.x + indexTip.x + middleTip.x) / 3) * this.canvas.width;
+            const palmY = ((wrist.y + indexTip.y + middleTip.y) / 3) * this.canvas.height;
+            this.lastPalmPositions.push({ x: palmX, y: palmY });
+          }
         }
+      } catch (err) {
+        // Skip frame on error
       }
-    } catch (err) {
-      // Ignore frame skip errors
+    }
+
+    // Apply scatter from active palm positions
+    for (let pos of this.lastPalmPositions) {
+      this.scatterFromPoint(pos.x, pos.y, 220);
     }
   }
 
@@ -308,13 +301,15 @@ export class BloomInauguration {
 
     this.ctx.clearRect(0, 0, width, height);
 
-    // Run gesture detection
+    // Run throttled hand gesture detection
     this.detectHandGesture();
 
     // Update & Render Flowers
-    for (let flower of this.flowers) {
+    for (let i = 0; i < this.flowers.length; i++) {
+      const flower = this.flowers[i];
+
       if (flower.scale < flower.targetScale) {
-        flower.scale += (flower.targetScale - flower.scale) * 0.2;
+        flower.scale += (flower.targetScale - flower.scale) * 0.25;
       }
 
       if (flower.state === 'scattered') {
@@ -323,7 +318,7 @@ export class BloomInauguration {
         flower.vy += 0.35; // Gravity
         flower.vx *= 0.98; // Drag
         flower.rotation += flower.vRot;
-        flower.opacity -= 0.008;
+        flower.opacity -= 0.01;
       }
 
       if (flower.opacity <= 0) continue;

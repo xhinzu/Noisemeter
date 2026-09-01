@@ -241,12 +241,15 @@ class ClassroomNoiseMeterApp {
         if (this.standardRevealBody) this.standardRevealBody.classList.add('hidden');
         if (this.bloomRevealBody) this.bloomRevealBody.classList.remove('hidden');
 
+        // Stop background confetti engine so Bloom Mode runs at buttery-smooth 60fps
+        if (this.confettiEngine) this.confettiEngine.stop();
+
         if (this.bloomRevealCanvas) {
           this.bloomInauguration.start(
             this.bloomRevealCanvas,
             this.bloomWebcamVideo || this.videoEl,
             () => {
-              if (this.confettiEngine) this.confettiEngine.launchCelebration();
+              // Play fanfare audio when flowers scatter (no duplicate confetti pop)
               if (this.fanfareAudio) this.fanfareAudio.playCelebrationFanfare();
             }
           );
