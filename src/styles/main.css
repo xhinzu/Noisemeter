@@ -718,6 +718,15 @@ input:checked + .slider-toggle:before {
   font-size: 1rem;
 }
 
+.btn-icon-only {
+  padding: 0.5rem;
+  width: 42px;
+  height: 42px;
+  font-size: 1.15rem;
+  border-radius: 50%;
+  justify-content: center;
+}
+
 .btn-link {
   background: none;
   border: none;
