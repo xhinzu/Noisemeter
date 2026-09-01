@@ -1149,6 +1149,7 @@ input:checked + .slider-toggle:before {
 }
 
 .reveal-card {
+  position: relative;
   background: linear-gradient(145deg, rgba(20, 20, 35, 0.98) 0%, rgba(10, 10, 20, 0.98) 100%);
   border: 3px solid #ffd700;
   box-shadow: 0 0 60px rgba(255, 215, 0, 0.4), inset 0 0 30px rgba(255, 215, 0, 0.1);
@@ -1157,6 +1158,21 @@ input:checked + .slider-toggle:before {
   max-width: 650px;
   width: 90%;
   border-radius: 24px;
+}
+
+.modal-close-top {
+  position: absolute;
+  top: 1rem;
+  right: 1.25rem;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--text-tertiary);
+  transition: color 0.2s ease;
+  z-index: 10;
+}
+
+.modal-close-top:hover {
+  color: #ffd700;
 }
 
 .fest-badge {

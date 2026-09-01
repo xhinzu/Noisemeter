@@ -145,9 +145,7 @@ class ClassroomNoiseMeterApp {
     this.cheerProgressFill = document.getElementById('cheer-progress-fill');
     this.btnManualInaugurate = document.getElementById('btn-manual-inaugurate');
     this.inaugurationRevealModal = document.getElementById('inauguration-reveal-modal');
-    this.btnReplayCelebration = document.getElementById('btn-replay-celebration');
-    this.btnResetCheer = document.getElementById('btn-reset-cheer');
-    this.btnCloseReveal = document.getElementById('btn-close-reveal');
+    this.btnCloseRevealTop = document.getElementById('btn-close-reveal-top');
 
     // Sync input values from state
     this.thresholdSlider.value = this.alertSystem.thresholdDb;
@@ -271,23 +269,21 @@ class ClassroomNoiseMeterApp {
       });
     }
 
-    if (this.btnReplayCelebration) {
-      this.btnReplayCelebration.addEventListener('click', () => {
-        this.inaugurationManager.replayCelebration();
-      });
+    const closeReveal = () => {
+      if (this.inaugurationRevealModal) this.inaugurationRevealModal.classList.add('hidden');
+      if (this.confettiEngine) this.confettiEngine.stop();
+      if (this.inaugurationManager) this.inaugurationManager.resetCheer();
+    };
+
+    if (this.btnCloseRevealTop) {
+      this.btnCloseRevealTop.addEventListener('click', closeReveal);
     }
 
-    if (this.btnResetCheer) {
-      this.btnResetCheer.addEventListener('click', () => {
-        if (this.inaugurationRevealModal) this.inaugurationRevealModal.classList.add('hidden');
-        this.inaugurationManager.resetCheer();
-      });
-    }
-
-    if (this.btnCloseReveal) {
-      this.btnCloseReveal.addEventListener('click', () => {
-        if (this.inaugurationRevealModal) this.inaugurationRevealModal.classList.add('hidden');
-        this.confettiEngine.stop();
+    if (this.inaugurationRevealModal) {
+      this.inaugurationRevealModal.addEventListener('click', (e) => {
+        if (e.target === this.inaugurationRevealModal) {
+          closeReveal();
+        }
       });
     }
 
