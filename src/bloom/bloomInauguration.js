@@ -1,10 +1,13 @@
 /**
  * Bloom Inauguration Manager
- * Renders a dense block of planted flowers over the inauguration text.
- * When the user waves an open palm (via MediaPipe HandLandmarker) or clicks/drags mouse,
- * the block of flowers unsticks and scatters with physics, dramatically revealing:
- *   "RISE 2026" (Floral font)
- *   "IS OFFICIALLY INAUGURATED! 🎉" (Normal font)
+ * Recreates the exact Bloomy AR Webcam Painting Interface:
+ * - Live selfie mirrored video stream background
+ * - Top glassmorphic brand pill ("🌸 Flower Wand 315")
+ * - Bottom status pill ("✨ Point to plant · Open your hand to scatter")
+ * - NO 3 bottom action buttons
+ * - Pre-planted block of 315 blooming flowers on top of live camera feed
+ * - Open palm hand gesture / pointer sweep unsticks flowers with explosion physics
+ * - Reveals "RISE 2026" (Floral font) & "IS OFFICIALLY INAUGURATED! 🎉"
  */
 
 import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
@@ -28,18 +31,23 @@ const SPRITE_EMOJIS = [
 
 export class BloomInauguration {
   constructor() {
+    this.container = null;
     this.canvas = null;
     this.ctx = null;
-    this.handLandmarker = null;
     this.video = null;
+    this.stream = null;
+    this.handLandmarker = null;
     this.animId = null;
     this.flowers = [];
     this.sprites = [];
     this.isHandTrackerReady = false;
     this.hasTriggeredScatter = false;
     this.scatteredCount = 0;
-    this.totalFlowers = 0;
+    this.totalFlowers = 315;
     this.onScatterComplete = null;
+
+    this.counterBadge = null;
+    this.statusPill = null;
   }
 
   /**
@@ -71,6 +79,25 @@ export class BloomInauguration {
   }
 
   /**
+   * Start live selfie mirrored webcam feed
+   */
+  async startCamera(videoEl) {
+    this.video = videoEl;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      });
+      this.video.srcObject = this.stream;
+      await this.video.play();
+    } catch (err) {
+      console.warn("Bloom webcam fallback to mirror canvas:", err);
+    }
+  }
+
+  /**
    * Initialize MediaPipe HandLandmarker for open-palm tracking
    */
   async initHandTracker() {
@@ -94,33 +121,33 @@ export class BloomInauguration {
   }
 
   /**
-   * Populate a dense block of flowers obscuring the center reveal text
+   * Populate pre-planted flower block over center text area (315 flowers)
    */
   createFlowerBlock(width, height) {
     this.flowers = [];
     this.hasTriggeredScatter = false;
     this.scatteredCount = 0;
+    this.totalFlowers = 315;
 
-    const blockWidth = Math.min(width * 0.85, 600);
-    const blockHeight = Math.min(height * 0.55, 260);
+    const blockWidth = Math.min(width * 0.85, 680);
+    const blockHeight = Math.min(height * 0.6, 300);
     const startX = (width - blockWidth) / 2;
     const startY = (height - blockHeight) / 2;
 
-    const rows = 11;
-    const cols = 16;
+    const rows = 15;
+    const cols = 21; // 15 x 21 = 315 flowers!
     const stepX = blockWidth / cols;
     const stepY = blockHeight / rows;
 
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
-        // Add subtle organic jitter
-        const jitterX = (Math.random() - 0.5) * stepX * 0.7;
-        const jitterY = (Math.random() - 0.5) * stepY * 0.7;
+        const jitterX = (Math.random() - 0.5) * stepX * 0.8;
+        const jitterY = (Math.random() - 0.5) * stepY * 0.8;
         const fx = startX + c * stepX + stepX / 2 + jitterX;
         const fy = startY + r * stepY + stepY / 2 + jitterY;
 
         const spriteIndex = Math.floor(Math.random() * this.sprites.length);
-        const baseSize = 40 + Math.random() * 16;
+        const baseSize = 38 + Math.random() * 16;
 
         this.flowers.push({
           x: fx,
@@ -135,31 +162,43 @@ export class BloomInauguration {
           vRot: 0,
           vx: 0,
           vy: 0,
-          state: 'planted', // 'planted' or 'scattered'
+          state: 'planted',
           opacity: 1.0
         });
       }
     }
 
-    this.totalFlowers = this.flowers.length;
+    if (this.counterBadge) {
+      this.counterBadge.textContent = this.totalFlowers.toString();
+    }
   }
 
   /**
-   * Launch the Bloom Inauguration Canvas Experience inside modal
+   * Launch the Bloomy AR Viewport Experience inside modal
    */
   async start(canvasEl, videoEl, onCompleteCallback) {
     this.canvas = canvasEl;
     this.ctx = canvasEl.getContext('2d');
-    this.video = videoEl;
     this.onScatterComplete = onCompleteCallback;
 
-    this.initSprites();
-    this.createFlowerBlock(canvasEl.width, canvasEl.height);
+    this.counterBadge = document.getElementById('bloom-flower-count');
+    this.statusPill = document.getElementById('bloom-status-pill');
 
-    // Setup mouse/touch fallback scattering
+    // Auto-resize canvas to match container bounds
+    const container = canvasEl.parentElement;
+    if (container) {
+      this.canvas.width = container.clientWidth || 800;
+      this.canvas.height = container.clientHeight || 500;
+    }
+
+    this.initSprites();
+    this.createFlowerBlock(this.canvas.width, this.canvas.height);
+
+    // Setup pointer fallback
     this.bindPointerEvents();
 
-    // Attempt hand tracker init
+    // Start selfie camera stream & hand tracker
+    await this.startCamera(videoEl);
     this.initHandTracker();
 
     // Start 60fps render loop
@@ -180,7 +219,7 @@ export class BloomInauguration {
     };
 
     this.canvas.onmousemove = (e) => {
-      if (e.buttons > 0 || Math.random() < 0.3) {
+      if (e.buttons > 0 || Math.random() < 0.4) {
         handlePointer(e);
       }
     };
@@ -208,15 +247,25 @@ export class BloomInauguration {
         this.scatteredCount++;
 
         const dist = Math.sqrt(distSq) || 1;
-        const speed = 8 + Math.random() * 12;
+        const speed = 8 + Math.random() * 14;
         flower.vx = (dx / dist) * speed + (Math.random() - 0.5) * 4;
         flower.vy = (dy / dist) * speed - (2 + Math.random() * 6);
         flower.vRot = (Math.random() - 0.5) * 0.25;
       }
     }
 
-    // If more than 40% scattered, trigger complete callback
-    if (!this.hasTriggeredScatter && this.scatteredCount > this.totalFlowers * 0.4) {
+    const remaining = Math.max(0, this.totalFlowers - this.scatteredCount);
+    if (this.counterBadge) {
+      this.counterBadge.textContent = remaining.toString();
+    }
+
+    if (this.scatteredCount > 10 && this.statusPill) {
+      this.statusPill.innerHTML = `<span>🌸</span><span>Scattering flowers!</span>`;
+      this.statusPill.classList.add('scattering');
+    }
+
+    // Trigger complete callback when >35% flowers scattered
+    if (!this.hasTriggeredScatter && this.scatteredCount > this.totalFlowers * 0.35) {
       this.hasTriggeredScatter = true;
       if (this.onScatterComplete) this.onScatterComplete();
     }
@@ -232,16 +281,14 @@ export class BloomInauguration {
       const results = this.handLandmarker.detectForVideo(this.video, performance.now());
       if (results.landmarks && results.landmarks.length > 0) {
         for (let landmarks of results.landmarks) {
-          // Check open palm (3+ fingers extended)
           const wrist = landmarks[0];
           const indexTip = landmarks[8];
           const middleTip = landmarks[12];
-          const ringTip = landmarks[16];
 
+          // Mirror X for selfie video matching
           const palmX = (1 - (wrist.x + indexTip.x + middleTip.x) / 3) * this.canvas.width;
           const palmY = ((wrist.y + indexTip.y + middleTip.y) / 3) * this.canvas.height;
 
-          // Trigger scatter around palm position
           this.scatterFromPoint(palmX, palmY, 220);
         }
       }
@@ -266,19 +313,17 @@ export class BloomInauguration {
 
     // Update & Render Flowers
     for (let flower of this.flowers) {
-      // Grow planted flowers
       if (flower.scale < flower.targetScale) {
         flower.scale += (flower.targetScale - flower.scale) * 0.2;
       }
 
       if (flower.state === 'scattered') {
-        // Physics update
         flower.x += flower.vx;
         flower.y += flower.vy;
         flower.vy += 0.35; // Gravity
-        flower.vx *= 0.98; // Air drag
+        flower.vx *= 0.98; // Drag
         flower.rotation += flower.vRot;
-        flower.opacity -= 0.008; // Fade out gradually
+        flower.opacity -= 0.008;
       }
 
       if (flower.opacity <= 0) continue;
@@ -302,28 +347,14 @@ export class BloomInauguration {
     this.animId = requestAnimationFrame(() => this.loop());
   }
 
-  /**
-   * Instant trigger: Scatter all remaining flowers automatically
-   */
-  scatterAll() {
-    for (let flower of this.flowers) {
-      if (flower.state === 'planted') {
-        flower.state = 'scattered';
-        flower.vx = (Math.random() - 0.5) * 16;
-        flower.vy = - (4 + Math.random() * 12);
-        flower.vRot = (Math.random() - 0.5) * 0.3;
-      }
-    }
-    if (!this.hasTriggeredScatter) {
-      this.hasTriggeredScatter = true;
-      if (this.onScatterComplete) this.onScatterComplete();
-    }
-  }
-
   stop() {
     if (this.animId) {
       cancelAnimationFrame(this.animId);
       this.animId = null;
+    }
+    if (this.stream) {
+      this.stream.getTracks().forEach(t => t.stop());
+      this.stream = null;
     }
     if (this.ctx && this.canvas) {
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);

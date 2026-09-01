@@ -149,6 +149,7 @@ class ClassroomNoiseMeterApp {
     this.standardRevealBody = document.getElementById('standard-reveal-body');
     this.bloomRevealBody = document.getElementById('bloom-reveal-body');
     this.bloomRevealCanvas = document.getElementById('bloom-reveal-canvas');
+    this.bloomWebcamVideo = document.getElementById('bloom-webcam-video');
 
     const isBloomEnabled = localStorage.getItem('bloomModeEnabled') === 'true';
     if (this.toggleBloomMode) this.toggleBloomMode.checked = isBloomEnabled;
@@ -243,7 +244,7 @@ class ClassroomNoiseMeterApp {
         if (this.bloomRevealCanvas) {
           this.bloomInauguration.start(
             this.bloomRevealCanvas,
-            this.videoEl,
+            this.bloomWebcamVideo || this.videoEl,
             () => {
               if (this.confettiEngine) this.confettiEngine.launchCelebration();
               if (this.fanfareAudio) this.fanfareAudio.playCelebrationFanfare();

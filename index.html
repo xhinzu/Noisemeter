@@ -399,15 +399,35 @@
 
       <!-- Bloom Interactive Gesture Reveal Content (Active when Bloom Mode is enabled) -->
       <div id="bloom-reveal-body" class="bloom-reveal-body hidden">
-        <div class="bloom-canvas-wrapper">
+        <div class="bloom-ar-container">
+          <!-- Selfie Mirror Webcam Video Feed -->
+          <video id="bloom-webcam-video" autoplay playsinline muted></video>
+
+          <!-- Particle & Gesture Render Canvas -->
+          <canvas id="bloom-reveal-canvas"></canvas>
+
+          <!-- Center Text Layer (Revealed when flowers scatter) -->
           <div id="bloom-text-reveal" class="bloom-text-container">
             <h1 class="floral-title">RISE 2026</h1>
             <p class="inauguration-sub-text">IS OFFICIALLY INAUGURATED! 🎉</p>
           </div>
-          <canvas id="bloom-reveal-canvas" width="640" height="340"></canvas>
-        </div>
-        <div id="bloom-gesture-hint" class="bloom-hint">
-          <span>🖐️ Wave open hand or click/drag to scatter flowers!</span>
+
+          <!-- Top Floating Navigation Pill -->
+          <div class="bloom-top-bar">
+            <div class="bloom-brand-pill">
+              <span class="bloom-brand-icon">🌸</span>
+              <span>Flower Wand</span>
+              <span id="bloom-flower-count" class="bloom-counter-badge">315</span>
+            </div>
+          </div>
+
+          <!-- Bottom Floating Gesture Status Pill (No 3 action buttons) -->
+          <div class="bloom-bottom-bar">
+            <div id="bloom-status-pill" class="bloom-status-pill">
+              <span class="status-icon">✨</span>
+              <span>Point to plant &bull; Open your hand to scatter</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
