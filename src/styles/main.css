@@ -128,24 +128,46 @@ body {
 }
 
 .brand-symbol {
-  font-size: 1.75rem;
-  background: var(--bg-elevated);
+  width: 42px;
+  height: 42px;
+  font-size: 1.15rem;
+  background: var(--bg-surface);
   border: 1px solid var(--border-strong);
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--radius-md);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
 }
 
-.brand-text h1 {
-  font-size: 1.25rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
+.brand-symbol:hover {
+  width: auto;
+  padding: 0 0.85rem;
+  border-radius: 20px;
+  background: var(--bg-elevated);
+  border-color: var(--border-bright);
 }
 
-.brand-tagline {
-  font-size: 0.75rem;
-  color: var(--text-tertiary);
+.brand-hover-label {
+  max-width: 0;
+  opacity: 0;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  font-weight: 800;
   letter-spacing: 0.05em;
-  font-family: var(--font-mono);
+  color: var(--text-primary);
+  margin-left: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.brand-symbol:hover .brand-hover-label {
+  max-width: 120px;
+  opacity: 1;
+  margin-left: 0.4rem;
 }
 
 .header-stats {
