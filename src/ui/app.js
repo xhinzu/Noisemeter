@@ -87,15 +87,6 @@ class ClassroomNoiseMeterApp {
     this.debounceValDisplay = document.getElementById('debounce-val-display');
     this.toggleBuzzer = document.getElementById('toggle-buzzer');
 
-    // Teacher Override
-    this.btnTeacherOverride = document.getElementById('btn-teacher-override');
-    this.overrideSubtext = document.getElementById('override-subtext');
-    this.overrideTimerWrapper = document.getElementById('override-timer-wrapper');
-    this.overrideTimerBar = document.getElementById('override-timer-bar');
-    this.overrideCountdown = document.getElementById('override-countdown');
-    this.btnCancelOverride = document.getElementById('btn-cancel-override');
-    this.overrideCard = document.getElementById('override-container');
-
     // Stats Bar
     this.streakDisplay = document.getElementById('streak-display');
     this.alertCountDisplay = document.getElementById('alert-count-display');
@@ -116,7 +107,6 @@ class ClassroomNoiseMeterApp {
     // Buttons
     this.btnStartClassSession = document.getElementById('btn-start-class-session');
     this.btnGrantMicModal = document.getElementById('btn-grant-mic-modal');
-    this.btnRequestMic = document.getElementById('btn-request-mic');
     this.btnSettings = document.getElementById('btn-settings');
     this.btnEndSession = document.getElementById('btn-end-session');
     this.btnCloseSettings = document.getElementById('btn-close-settings');
@@ -128,7 +118,6 @@ class ClassroomNoiseMeterApp {
     // Settings elements
     this.spectralSensitivitySlider = document.getElementById('spectral-sensitivity-slider');
     this.sensitivityValDisplay = document.getElementById('sensitivity-val-display');
-    this.overrideTimeoutSelect = document.getElementById('override-timeout-select');
     this.toggleWebcam = document.getElementById('toggle-webcam');
     this.webcamHardwareAlert = document.getElementById('webcam-hardware-alert');
     this.webcamOptionsPanel = document.getElementById('webcam-options-panel');
@@ -160,11 +149,10 @@ class ClassroomNoiseMeterApp {
     this.btnToggleSubtitles = document.getElementById('btn-toggle-subtitles');
 
     // Sync input values from state
-    this.thresholdSlider.value = this.alertSystem.thresholdDb;
-    this.thresholdValDisplay.textContent = `${this.alertSystem.thresholdDb} dB`;
-    this.debounceSlider.value = this.alertSystem.debounceSeconds;
-    this.debounceValDisplay.textContent = `${this.alertSystem.debounceSeconds} sec`;
-    this.overrideTimeoutSelect.value = this.teacherOverride.timeoutSeconds.toString();
+    if (this.thresholdSlider) this.thresholdSlider.value = this.alertSystem.thresholdDb;
+    if (this.thresholdValDisplay) this.thresholdValDisplay.textContent = `${this.alertSystem.thresholdDb} dB`;
+    if (this.debounceSlider) this.debounceSlider.value = this.alertSystem.debounceSeconds;
+    if (this.debounceValDisplay) this.debounceValDisplay.textContent = `${this.alertSystem.debounceSeconds} sec`;
   }
 
   bindEvents() {
@@ -175,10 +163,7 @@ class ClassroomNoiseMeterApp {
 
     this.audioEngine.onError = (err) => {
       console.error("Audio Engine Error:", err);
-      this.permissionModal.classList.remove('hidden');
-      document.getElementById('mic-title').textContent = "Microphone Permission Blocked";
-      document.getElementById('mic-desc').textContent = "Please allow microphone access in your browser location/security settings.";
-      this.btnRequestMic.classList.remove('hidden');
+      if (this.permissionModal) this.permissionModal.classList.remove('hidden');
     };
 
     // 2. Alert System Callbacks
@@ -197,28 +182,7 @@ class ClassroomNoiseMeterApp {
       this.snapshotManager.onAlertTrigger(alertCount);
     };
 
-    // 3. Teacher Override Callbacks
-    this.teacherOverride.onStateChange = (isActive, remainingSec, totalSec) => {
-      this.btnTeacherOverride.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-      if (isActive) {
-        this.overrideSubtext.textContent = "ACTIVE - Alerts Ignored";
-        this.overrideTimerWrapper.classList.remove('hidden');
-        
-        if (totalSec > 0) {
-          this.overrideCountdown.textContent = `${remainingSec}s`;
-          const pct = (remainingSec / totalSec) * 100;
-          this.overrideTimerBar.style.width = `${pct}%`;
-        } else {
-          this.overrideCountdown.textContent = "Manual Off";
-          this.overrideTimerBar.style.width = "100%";
-        }
-      } else {
-        this.overrideSubtext.textContent = "Click to suppress noise alerts";
-        this.overrideTimerWrapper.classList.add('hidden');
-      }
-    };
-
-    // 4. Session Tracker Callback
+    // 3. Session Tracker Callback
     this.sessionTracker.onTick = (elapsedStr, streakStr) => {
       this.sessionTimerDisplay.textContent = elapsedStr;
       this.streakDisplay.textContent = streakStr;
@@ -391,15 +355,10 @@ class ClassroomNoiseMeterApp {
       });
     }
 
-    // Teacher Override Button
-    this.btnTeacherOverride.addEventListener('click', () => {
-      this.teacherOverride.toggle();
-    });
-
-    this.btnCancelOverride.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.teacherOverride.deactivate();
-    });
+    // Mic Access Buttons
+    if (this.btnGrantMicModal) {
+      this.btnGrantMicModal.addEventListener('click', () => this.startAudioStream());
+    }
 
     // Modals
     this.btnSettings.addEventListener('click', () => {
@@ -418,10 +377,6 @@ class ClassroomNoiseMeterApp {
       const val = parseInt(e.target.value, 10);
       this.sensitivityValDisplay.textContent = `${val}%`;
       this.audioEngine.setSensitivity(val / 100);
-    });
-
-    this.overrideTimeoutSelect.addEventListener('change', (e) => {
-      this.teacherOverride.setTimeoutSeconds(e.target.value);
     });
 
     // Webcam Toggle
@@ -487,15 +442,11 @@ class ClassroomNoiseMeterApp {
 
   async startAudioStream() {
     try {
-      this.permissionModal.classList.add('hidden');
-      document.getElementById('mic-title').textContent = "Microphone Active";
-      document.getElementById('mic-desc').textContent = "Analyzing room acoustics live";
-      this.btnRequestMic.classList.add('hidden');
-
+      if (this.permissionModal) this.permissionModal.classList.add('hidden');
       await this.audioEngine.start();
       this.speechRecognition.start();
     } catch (err) {
-      this.permissionModal.classList.remove('hidden');
+      if (this.permissionModal) this.permissionModal.classList.remove('hidden');
     }
   }
 
