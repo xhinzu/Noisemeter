@@ -1101,64 +1101,66 @@ input:checked + .slider-toggle:before {
   grid-column: 1 / -1;
   background: linear-gradient(135deg, rgba(30, 27, 75, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
   border: 2px solid #ffd700;
-  box-shadow: 0 0 30px rgba(255, 215, 0, 0.25);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.25);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
   gap: 1rem;
-  padding: 1.25rem 1.5rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: var(--radius-lg);
   animation: pulse-border 2s infinite ease-in-out;
+  flex-wrap: wrap;
 }
 
 @keyframes pulse-border {
-  0%, 100% { border-color: #ffd700; box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); }
-  50% { border-color: #ff1493; box-shadow: 0 0 35px rgba(255, 20, 147, 0.5); }
+  0%, 100% { border-color: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3); }
+  50% { border-color: #ff1493; box-shadow: 0 0 25px rgba(255, 20, 147, 0.5); }
 }
 
-.inauguration-header {
+.inauguration-left {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
 .inauguration-title-badge {
   font-weight: 900;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   letter-spacing: 0.05em;
   color: #ffd700;
   text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-}
-
-.inauguration-sub {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .cheer-meter-wrapper {
+  flex: 1;
   display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 220px;
 }
 
-.cheer-label-row {
-  display: flex;
-  justify-content: space-between;
+.cheer-label {
   font-weight: 800;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #ffffff;
+  white-space: nowrap;
 }
 
 .cheer-power-val {
   color: #ffd700;
   font-family: var(--font-mono);
-  font-size: 1.1rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  min-width: 38px;
 }
 
 .cheer-progress-track {
-  height: 22px;
+  flex: 1;
+  height: 16px;
   background: var(--bg-surface);
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
   border: 1px solid var(--border-strong);
   position: relative;
@@ -1167,14 +1169,14 @@ input:checked + .slider-toggle:before {
 .cheer-progress-fill {
   height: 100%;
   background: linear-gradient(90deg, #ff1493 0%, #ffd700 70%, #00ffff 100%);
-  border-radius: 12px;
+  border-radius: 10px;
   transition: width 0.15s ease-out;
   box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
 }
 
 .inauguration-actions {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
 }
 
 /* Canvas Confetti Layer (Renders in front of modal backdrop) */
