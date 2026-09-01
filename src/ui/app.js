@@ -13,6 +13,7 @@ import { ConfettiEngine } from '../inauguration/confetti.js';
 import { FanfareAudio } from '../inauguration/fanfare.js';
 import { InaugurationManager } from '../inauguration/inaugurationManager.js';
 import { SpeechRecognitionManager } from '../audio/speechRecognition.js';
+import { BloomInauguration } from '../bloom/bloomInauguration.js';
 
 class ClassroomNoiseMeterApp {
   constructor() {
@@ -31,6 +32,9 @@ class ClassroomNoiseMeterApp {
     this.confettiEngine = new ConfettiEngine(this.confettiCanvas);
     this.fanfareAudio = new FanfareAudio();
     this.inaugurationManager = new InaugurationManager(this.confettiEngine, this.fanfareAudio);
+
+    // Bloom Interactive AR Flower Scattering Module
+    this.bloomInauguration = new BloomInauguration();
 
     this.videoEl = document.getElementById('hidden-video');
     this.snapshotManager = new SnapshotManager(this.videoEl);
@@ -140,6 +144,15 @@ class ClassroomNoiseMeterApp {
     this.inaugurationRevealModal = document.getElementById('inauguration-reveal-modal');
     this.btnCloseRevealTop = document.getElementById('btn-close-reveal-top');
 
+    // Bloom Mode DOM Elements
+    this.toggleBloomMode = document.getElementById('toggle-bloom-mode');
+    this.standardRevealBody = document.getElementById('standard-reveal-body');
+    this.bloomRevealBody = document.getElementById('bloom-reveal-body');
+    this.bloomRevealCanvas = document.getElementById('bloom-reveal-canvas');
+
+    const isBloomEnabled = localStorage.getItem('bloomModeEnabled') === 'true';
+    if (this.toggleBloomMode) this.toggleBloomMode.checked = isBloomEnabled;
+
     // Live Subtitles DOM Elements
     this.subtitlesBox = document.getElementById('subtitles-box');
     this.subtitlesText = document.getElementById('subtitles-text');
@@ -217,8 +230,29 @@ class ClassroomNoiseMeterApp {
     };
 
     this.inaugurationManager.onInaugurationTriggered = () => {
+      const isBloomEnabled = localStorage.getItem('bloomModeEnabled') === 'true';
+
       if (this.inaugurationRevealModal) {
         this.inaugurationRevealModal.classList.remove('hidden');
+      }
+
+      if (isBloomEnabled) {
+        if (this.standardRevealBody) this.standardRevealBody.classList.add('hidden');
+        if (this.bloomRevealBody) this.bloomRevealBody.classList.remove('hidden');
+
+        if (this.bloomRevealCanvas) {
+          this.bloomInauguration.start(
+            this.bloomRevealCanvas,
+            this.videoEl,
+            () => {
+              if (this.confettiEngine) this.confettiEngine.launchCelebration();
+              if (this.fanfareAudio) this.fanfareAudio.playCelebrationFanfare();
+            }
+          );
+        }
+      } else {
+        if (this.bloomRevealBody) this.bloomRevealBody.classList.add('hidden');
+        if (this.standardRevealBody) this.standardRevealBody.classList.remove('hidden');
       }
     };
 
@@ -230,6 +264,7 @@ class ClassroomNoiseMeterApp {
         if (this.inaugurationBannerCard) this.inaugurationBannerCard.classList.add('hidden');
         if (this.btnInaugurationMode) this.btnInaugurationMode.classList.remove('active-mode');
         if (this.inaugurationRevealModal) this.inaugurationRevealModal.classList.add('hidden');
+        if (this.bloomInauguration) this.bloomInauguration.stop();
       }
     };
 
@@ -248,6 +283,7 @@ class ClassroomNoiseMeterApp {
     const closeReveal = () => {
       if (this.inaugurationRevealModal) this.inaugurationRevealModal.classList.add('hidden');
       if (this.confettiEngine) this.confettiEngine.stop();
+      if (this.bloomInauguration) this.bloomInauguration.stop();
       if (this.inaugurationManager) this.inaugurationManager.resetCheer();
     };
 
@@ -343,6 +379,12 @@ class ClassroomNoiseMeterApp {
     if (this.toggleBuzzer) {
       this.toggleBuzzer.addEventListener('change', (e) => {
         this.buzzer.setEnabled(e.target.checked);
+      });
+    }
+
+    if (this.toggleBloomMode) {
+      this.toggleBloomMode.addEventListener('change', (e) => {
+        localStorage.setItem('bloomModeEnabled', e.target.checked ? 'true' : 'false');
       });
     }
 

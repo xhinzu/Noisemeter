@@ -246,6 +246,17 @@
                 </label>
               </div>
             </div>
+
+            <div class="toggle-item">
+              <div class="toggle-info">
+                <span class="toggle-title">🌸 Enable Bloom Mode</span>
+                <span class="toggle-sub">Scatter an interactive AR flower block with hand gestures to reveal inauguration!</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggle-bloom-mode" />
+                <span class="slider-toggle"></span>
+              </label>
+            </div>
           </div>
         </div>
 
@@ -374,13 +385,29 @@
   <div id="inauguration-reveal-modal" class="modal-backdrop hidden celebration-modal-backdrop">
     <div class="modal-card reveal-card">
       <button id="btn-close-reveal-top" class="btn-close modal-close-top" aria-label="Close">&times;</button>
-      <div class="reveal-body">
+      
+      <!-- Standard Reveal Content -->
+      <div id="standard-reveal-body" class="reveal-body">
         <h1 class="reveal-title animate-glow">RISE 2026</h1>
         <div class="reveal-subtitle">IS OFFICIALLY INAUGURATED! 🎉</div>
         <p class="reveal-desc">Welcome students, teachers, and guests to RISE 2026!</p>
         
         <div class="reveal-ribbon-decor">
           <span>🚀 INNOVATION &bull; DISCOVERY &bull; CREATIVITY 🚀</span>
+        </div>
+      </div>
+
+      <!-- Bloom Interactive Gesture Reveal Content (Active when Bloom Mode is enabled) -->
+      <div id="bloom-reveal-body" class="bloom-reveal-body hidden">
+        <div class="bloom-canvas-wrapper">
+          <div id="bloom-text-reveal" class="bloom-text-container">
+            <h1 class="floral-title">RISE 2026</h1>
+            <p class="inauguration-sub-text">IS OFFICIALLY INAUGURATED! 🎉</p>
+          </div>
+          <canvas id="bloom-reveal-canvas" width="640" height="340"></canvas>
+        </div>
+        <div id="bloom-gesture-hint" class="bloom-hint">
+          <span>🖐️ Wave open hand or click/drag to scatter flowers!</span>
         </div>
       </div>
     </div>
