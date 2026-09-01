@@ -313,7 +313,7 @@ body {
 
 .digital-readout {
   position: absolute;
-  bottom: 5px;
+  bottom: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -321,10 +321,10 @@ body {
 
 .db-number {
   font-family: var(--font-mono);
-  font-size: 3.75rem;
+  font-size: 2.6rem;
   font-weight: 900;
   line-height: 1;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.02em;
   color: var(--text-primary);
 }
 
