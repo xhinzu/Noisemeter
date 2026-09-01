@@ -10,16 +10,16 @@ export class ConfettiEngine {
     this.animationId = null;
     this.isRunning = false;
 
-    // Vibrant festive color palette
+    // High contrast neon & metallic festive color palette
     this.colors = [
-      '#FFD700', // Gold
-      '#FF1493', // Deep Pink
-      '#00FFFF', // Cyan
-      '#FF4500', // Orange Red
-      '#7B68EE', // Medium Slate Blue
-      '#00FF7F', // Spring Green
-      '#FFFFFF', // Bright White
-      '#FF007F', // Neon Magenta
+      '#FFD700', // Metallic Gold
+      '#FF1493', // Neon Pink
+      '#00FFFF', // Electric Cyan
+      '#FF4500', // Bright Crimson
+      '#A855F7', // Vivid Purple
+      '#00FF7F', // Neon Green
+      '#FFFFFF', // Pure White
+      '#FFD700', // Double Gold weight
       '#38EF7D'  // Emerald
     ];
 
@@ -34,7 +34,7 @@ export class ConfettiEngine {
   }
 
   /**
-   * Launch party poppers from left & right bottom corners plus top cascade
+   * Launch party poppers from left & right bottom corners plus center high blast
    */
   launchCelebration() {
     this.resizeCanvas();
@@ -44,17 +44,17 @@ export class ConfettiEngine {
     const width = this.canvas.width;
     const height = this.canvas.height;
 
-    // 1. Left Corner Party Popper Burst
-    this.spawnPopperBurst(width * 0.1, height * 0.9, 85, 30, 60);
+    // 1. Left Corner Party Popper Cannon (Angles ~45 to ~75 degrees)
+    this.spawnPopperBurst(width * 0.08, height * 0.95, 140, 40, 80, 1);
 
-    // 2. Right Corner Party Popper Burst
-    this.spawnPopperBurst(width * 0.9, height * 0.9, 120, 120, 150);
+    // 2. Right Corner Party Popper Cannon (Angles ~105 to ~140 degrees)
+    this.spawnPopperBurst(width * 0.92, height * 0.95, 140, 100, 140, -1);
 
     // 3. Center High Cannon Burst
-    this.spawnPopperBurst(width * 0.5, height * 0.85, 100, 60, 120);
+    this.spawnPopperBurst(width * 0.5, height * 0.85, 160, 60, 120, 0);
 
-    // 4. Cascading Rain Confetti across top
-    for (let i = 0; i < 70; i++) {
+    // 4. Cascading Rain Confetti across full top
+    for (let i = 0; i < 100; i++) {
       this.particles.push(this.createCascadingParticle(width, height));
     }
 
@@ -63,31 +63,36 @@ export class ConfettiEngine {
     }
   }
 
-  spawnPopperBurst(originX, originY, count, minAngleDeg, maxAngleDeg) {
+  spawnPopperBurst(originX, originY, count, minAngleDeg, maxAngleDeg, directionSign) {
     for (let i = 0; i < count; i++) {
       const angleRad = (Math.random() * (maxAngleDeg - minAngleDeg) + minAngleDeg) * (Math.PI / 180);
-      const speed = Math.random() * 22 + 12;
+      const speed = Math.random() * 32 + 18;
 
-      const isRibbon = Math.random() > 0.4;
+      const isRibbon = Math.random() > 0.35;
       const color = this.colors[Math.floor(Math.random() * this.colors.length)];
+
+      let vx = Math.cos(angleRad) * speed;
+      if (directionSign < 0) vx = -Math.abs(vx);
+      else if (directionSign > 0) vx = Math.abs(vx);
+      else vx = (Math.random() - 0.5) * speed * 1.5;
 
       this.particles.push({
         x: originX,
         y: originY,
-        vx: Math.cos(angleRad) * speed * (Math.random() > 0.5 ? 1 : -1),
-        vy: -Math.abs(Math.sin(angleRad) * speed), // Shoot upwards
-        gravity: 0.35 + Math.random() * 0.25,
-        drag: 0.96,
-        size: isRibbon ? Math.random() * 6 + 6 : Math.random() * 10 + 6,
-        length: isRibbon ? Math.random() * 25 + 15 : Math.random() * 10 + 6,
+        vx: vx,
+        vy: -Math.abs(Math.sin(angleRad) * speed * 1.2), // Explosive upward vector
+        gravity: 0.38 + Math.random() * 0.2,
+        drag: 0.965,
+        size: isRibbon ? Math.random() * 8 + 8 : Math.random() * 14 + 8,
+        length: isRibbon ? Math.random() * 35 + 20 : Math.random() * 14 + 8,
         color: color,
         rotation: Math.random() * Math.PI * 2,
-        rotationSpeed: (Math.random() - 0.5) * 0.25,
-        oscillationSpeed: Math.random() * 0.1 + 0.05,
+        rotationSpeed: (Math.random() - 0.5) * 0.3,
+        oscillationSpeed: Math.random() * 0.12 + 0.05,
         oscillationOffset: Math.random() * Math.PI * 2,
         isRibbon: isRibbon,
         opacity: 1.0,
-        decay: Math.random() * 0.003 + 0.002
+        decay: Math.random() * 0.0025 + 0.0015
       });
     }
   }
@@ -97,20 +102,20 @@ export class ConfettiEngine {
     return {
       x: Math.random() * width,
       y: -Math.random() * height * 0.5,
-      vx: (Math.random() - 0.5) * 4,
-      vy: Math.random() * 4 + 2,
-      gravity: 0.15 + Math.random() * 0.1,
-      drag: 0.98,
-      size: isRibbon ? Math.random() * 5 + 5 : Math.random() * 8 + 6,
-      length: isRibbon ? Math.random() * 20 + 12 : Math.random() * 8 + 6,
+      vx: (Math.random() - 0.5) * 5,
+      vy: Math.random() * 5 + 3,
+      gravity: 0.18 + Math.random() * 0.1,
+      drag: 0.985,
+      size: isRibbon ? Math.random() * 7 + 6 : Math.random() * 12 + 8,
+      length: isRibbon ? Math.random() * 30 + 15 : Math.random() * 12 + 8,
       color: this.colors[Math.floor(Math.random() * this.colors.length)],
       rotation: Math.random() * Math.PI * 2,
-      rotationSpeed: (Math.random() - 0.5) * 0.15,
-      oscillationSpeed: Math.random() * 0.08 + 0.03,
+      rotationSpeed: (Math.random() - 0.5) * 0.2,
+      oscillationSpeed: Math.random() * 0.09 + 0.04,
       oscillationOffset: Math.random() * Math.PI * 2,
       isRibbon: isRibbon,
       opacity: 1.0,
-      decay: Math.random() * 0.002 + 0.001
+      decay: Math.random() * 0.0018 + 0.001
     };
   }
 
@@ -127,24 +132,26 @@ export class ConfettiEngine {
       p.vy *= p.drag;
       p.vy += p.gravity;
 
-      p.x += p.vx + Math.sin(p.oscillationOffset) * 1.5;
+      p.x += p.vx + Math.sin(p.oscillationOffset) * 2.0;
       p.y += p.vy;
 
       p.oscillationOffset += p.oscillationSpeed;
       p.rotation += p.rotationSpeed;
       p.opacity -= p.decay;
 
-      if (p.opacity <= 0 || p.y > this.canvas.height + 50) {
+      if (p.opacity <= 0 || p.y > this.canvas.height + 60) {
         this.particles.splice(i, 1);
         continue;
       }
 
-      // Render particle
+      // Render particle with glowing effect
       this.ctx.save();
       this.ctx.globalAlpha = Math.max(0, p.opacity);
       this.ctx.translate(p.x, p.y);
       this.ctx.rotate(p.rotation);
       this.ctx.fillStyle = p.color;
+      this.ctx.shadowColor = p.color;
+      this.ctx.shadowBlur = 10;
 
       if (p.isRibbon) {
         // Draw ribbon streamer
