@@ -10,11 +10,13 @@ export class InaugurationManager {
     this.isActiveMode = false;
     this.isRevealed = false;
 
-    // Cheer accumulation state
+    // Cheer accumulation state & configurable parameters
     this.cheerPowerPct = 0; // 0 to 100%
-    this.targetDbThreshold = 70.0; // Cheer threshold (dB)
-    this.accumulateRate = 12.0;    // Pct added per frame when shouting
-    this.decayRate = 3.5;          // Pct lost per frame when quiet
+    this.targetDbThreshold = 75.0; // Minimum sound volume (dB) required to build cheer
+    this.sustainedDurationSec = 3.5; // Required continuous shout duration (seconds)
+    this.decayRate = 25.0; // Decay rate (% per sec) when quiet / below threshold
+
+    this.lastFrameTime = performance.now();
 
     // Callbacks
     this.onCheerPowerUpdate = null;
@@ -22,8 +24,21 @@ export class InaugurationManager {
     this.onModeStateChange = null;
   }
 
+  setSustainedDuration(sec) {
+    this.sustainedDurationSec = Math.max(0.5, Math.min(15.0, parseFloat(sec)));
+  }
+
+  setTargetDbThreshold(db) {
+    this.targetDbThreshold = parseFloat(db);
+  }
+
+  setDecayRate(ratePct) {
+    this.decayRate = parseFloat(ratePct);
+  }
+
   setMode(active) {
     this.isActiveMode = active;
+    this.lastFrameTime = performance.now();
     if (!active) {
       this.resetCheer();
       if (this.confettiEngine) this.confettiEngine.stop();
@@ -38,19 +53,27 @@ export class InaugurationManager {
   }
 
   /**
-   * Process decibel input from audio frame
+   * Process decibel input from audio frame using precise delta-time accumulation
    */
   processAudioFrame(db) {
     if (!this.isActiveMode || this.isRevealed) return;
 
+    const now = performance.now();
+    const dt = Math.min(0.1, (now - (this.lastFrameTime || now)) / 1000.0); // Delta time in seconds
+    this.lastFrameTime = now;
+
     if (db >= this.targetDbThreshold) {
-      // Scale cheer build rate by how loud the sound is above threshold
+      // Accumulation rate (%/sec) = 100 / sustainedDurationSec
+      const accumulateRate = 100.0 / Math.max(0.5, this.sustainedDurationSec);
+      
+      // Gentle boost scaling for intense shouting above threshold (up to 1.3x speed)
       const dbDelta = db - this.targetDbThreshold;
-      const boost = Math.min(2.5, 1.0 + (dbDelta / 15.0));
-      this.cheerPowerPct += this.accumulateRate * boost * 0.1;
+      const boost = Math.min(1.3, 1.0 + (dbDelta / 25.0));
+
+      this.cheerPowerPct += accumulateRate * boost * dt;
     } else {
-      // Natural decay when crowd pauses
-      this.cheerPowerPct -= this.decayRate * 0.1;
+      // Rapid decay when crowd pauses or noise drops below threshold (prevents brief noises from building up)
+      this.cheerPowerPct -= this.decayRate * dt;
     }
 
     this.cheerPowerPct = Math.max(0, Math.min(100, this.cheerPowerPct));

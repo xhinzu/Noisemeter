@@ -73,6 +73,15 @@ class ClassroomNoiseMeterApp {
 
       const savedTimeout = localStorage.getItem('nm_override_timeout');
       if (savedTimeout) this.teacherOverride.setTimeoutSeconds(parseInt(savedTimeout, 10));
+
+      const savedRiseDuration = localStorage.getItem('nm_rise_duration');
+      if (savedRiseDuration && this.inaugurationManager) this.inaugurationManager.setSustainedDuration(parseFloat(savedRiseDuration));
+
+      const savedRiseThreshold = localStorage.getItem('nm_rise_threshold');
+      if (savedRiseThreshold && this.inaugurationManager) this.inaugurationManager.setTargetDbThreshold(parseFloat(savedRiseThreshold));
+
+      const savedRiseDecay = localStorage.getItem('nm_rise_decay');
+      if (savedRiseDecay && this.inaugurationManager) this.inaugurationManager.setDecayRate(parseFloat(savedRiseDecay));
     } catch(e) {}
   }
 
@@ -129,6 +138,14 @@ class ClassroomNoiseMeterApp {
     this.photoCountBadge = document.getElementById('photo-count-badge');
     this.btnClearPhotosSettings = document.getElementById('btn-clear-photos-settings');
 
+    // RISE Settings Controls
+    this.riseDurationSlider = document.getElementById('rise-duration-slider');
+    this.riseDurationValDisplay = document.getElementById('rise-duration-val-display');
+    this.riseThresholdSlider = document.getElementById('rise-threshold-slider');
+    this.riseThresholdValDisplay = document.getElementById('rise-threshold-val-display');
+    this.riseDecaySlider = document.getElementById('rise-decay-slider');
+    this.riseDecayValDisplay = document.getElementById('rise-decay-val-display');
+
     // Gallery
     this.galleryGrid = document.getElementById('gallery-grid');
     this.galleryCount = document.getElementById('gallery-count');
@@ -167,6 +184,19 @@ class ClassroomNoiseMeterApp {
     if (this.thresholdValDisplay) this.thresholdValDisplay.textContent = `${this.alertSystem.thresholdDb} dB`;
     if (this.debounceSlider) this.debounceSlider.value = this.alertSystem.debounceSeconds;
     if (this.debounceValDisplay) this.debounceValDisplay.textContent = `${this.alertSystem.debounceSeconds} sec`;
+
+    if (this.riseDurationSlider && this.inaugurationManager) {
+      this.riseDurationSlider.value = this.inaugurationManager.sustainedDurationSec;
+      if (this.riseDurationValDisplay) this.riseDurationValDisplay.textContent = `${this.inaugurationManager.sustainedDurationSec} sec`;
+    }
+    if (this.riseThresholdSlider && this.inaugurationManager) {
+      this.riseThresholdSlider.value = this.inaugurationManager.targetDbThreshold;
+      if (this.riseThresholdValDisplay) this.riseThresholdValDisplay.textContent = `${this.inaugurationManager.targetDbThreshold} dB`;
+    }
+    if (this.riseDecaySlider && this.inaugurationManager) {
+      this.riseDecaySlider.value = this.inaugurationManager.decayRate;
+      if (this.riseDecayValDisplay) this.riseDecayValDisplay.textContent = `${this.inaugurationManager.decayRate}%/sec`;
+    }
   }
 
   bindEvents() {
@@ -380,6 +410,34 @@ class ClassroomNoiseMeterApp {
       });
     }
 
+    if (this.riseDurationSlider) {
+      this.riseDurationSlider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        if (this.riseDurationValDisplay) this.riseDurationValDisplay.textContent = `${val} sec`;
+        if (this.inaugurationManager) this.inaugurationManager.setSustainedDuration(val);
+      });
+    }
+
+    if (this.riseThresholdSlider) {
+      this.riseThresholdSlider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        if (this.riseThresholdValDisplay) this.riseThresholdValDisplay.textContent = `${val} dB`;
+        if (this.inaugurationManager) this.inaugurationManager.setTargetDbThreshold(val);
+      });
+    }
+
+    if (this.riseDecaySlider) {
+      this.riseDecaySlider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        let speedLabel = 'Medium';
+        if (val <= 10) speedLabel = 'Slow';
+        else if (val <= 25) speedLabel = 'Fast';
+        else speedLabel = 'Instant';
+        if (this.riseDecayValDisplay) this.riseDecayValDisplay.textContent = `${speedLabel} (${val}%/sec)`;
+        if (this.inaugurationManager) this.inaugurationManager.setDecayRate(val);
+      });
+    }
+
     if (this.toggleBuzzer) {
       this.toggleBuzzer.addEventListener('change', (e) => {
         this.buzzer.setEnabled(e.target.checked);
@@ -423,6 +481,13 @@ class ClassroomNoiseMeterApp {
 
     if (this.btnSaveSettings) {
       this.btnSaveSettings.addEventListener('click', () => {
+        try {
+          if (this.thresholdSlider) localStorage.setItem('nm_threshold_db', this.thresholdSlider.value);
+          if (this.debounceSlider) localStorage.setItem('nm_debounce_sec', this.debounceSlider.value);
+          if (this.riseDurationSlider) localStorage.setItem('nm_rise_duration', this.riseDurationSlider.value);
+          if (this.riseThresholdSlider) localStorage.setItem('nm_rise_threshold', this.riseThresholdSlider.value);
+          if (this.riseDecaySlider) localStorage.setItem('nm_rise_decay', this.riseDecaySlider.value);
+        } catch(e) {}
         if (this.settingsModal) this.settingsModal.classList.add('hidden');
       });
     }
